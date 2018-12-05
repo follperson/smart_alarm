@@ -1,0 +1,119 @@
+import pyaudio
+import wave
+import audioop
+import pandas as pd
+import time
+import matplotlib.pyplot as plt
+from scipy.signal import savgol_filter
+import datetime as dt
+from scipy.ndimage.filters import gaussian_filter1d
+import os
+import math
+
+
+class SoundRecorderAnalyzer(object):
+    class Names:
+        HOME = 'Home'
+        SLEEPING = 'Sleeping'
+        WORK = 'Work'
+
+    def __init__(self, name='', record_secs=5, sleep_period=10, to_record=False):
+        self.record_secs = record_secs
+        self.sleep_period = sleep_period
+        self.to_record = to_record
+
+        self.form_1 = pyaudio.paInt16  # 16-bit resolution
+        self.chans = 1  # 1 channel
+        self.samp_rate = 44100  # 44.1kHz sampling rate
+        self.chunk = 4096  # 2^12 samples for buffer
+        self.dev_index = 1  # device index found by p.get_device_info_by_index(ii)
+        self.audio = pyaudio.PyAudio()  # create pyaudio instantiation
+        stream = self.audio.open(format=self.form_1, rate=self.samp_rate, channels=self.chans,
+                                 input_device_index=self.dev_index, input=True,
+                                 frames_per_buffer=self.chunk)
+        self.stream = stream
+        self.frames_to_record = int((self.samp_rate / self.chunk) * self.record_secs)
+        mic_name = self.audio.get_device_info_by_index(self.dev_index).get('name')
+        print('Using microphone %s' % mic_name)
+        buffer = mic_name + '_' + str(dt.datetime.now()).split('.')[0].replace(':', '.')
+        self.name = name + '_' + buffer
+        if self.to_record:
+            os.makedirs('audio_records\\%s')
+
+    def check_name(self):
+        for ii in range(self.audio.get_device_count()):
+            print(self.audio.get_device_info_by_index(ii).get('name'))
+
+    def record(self):
+        frames = []
+        audio_power = []
+        self.stream.start_stream()
+        for ii in range(0, self.frames_to_record):
+            data = self.stream.read(self.chunk)
+            audio_power.append(audioop.rms(data, self.audio.get_sample_size(self.form_1)))
+            if self.to_record:
+                frames.append(data)
+        self.stream.stop_stream()
+
+        if self.to_record:
+            wavefile = wave.open('audio_records\\%s\\audio at %s.wav' % (self.name, str(time.time()).split('.')[0]), 'wb')
+            wavefile.setnchannels(self.chans)
+            wavefile.setsampwidth(self.audio.get_sample_size(self.form_1))
+            wavefile.setframerate(self.samp_rate)
+            wavefile.writeframes(b''.join(frames))
+            wavefile.close()
+        return audio_power
+
+    def collect_n_soundamps(self,n=10):
+        data = []
+        for i in range(n):
+            print(round((i+1) / n, 4))
+            start = time.time()
+            amplitude = self.record()
+            avg_amp = sum(amplitude) / len(amplitude)
+            print(avg_amp)
+            data.append([i,start, avg_amp, amplitude])
+            time.sleep(self.sleep_period)
+        self.stream.close()
+        self.audio.terminate()
+        df = pd.DataFrame(data, columns=['index', 'start_time', 'average_amplitude', 'full_amplitude'])
+        if not os.path.exists('data_collection\\%s'):
+            os.makedirs('data_collection\\%s')
+        df.to_csv('data_collection\\%s\\data_collection_raw.csv' % self.name)
+        return df
+
+    def record_hours(self, num_hours):
+        seconds_total = num_hours * 60 * 60
+        num_periods = seconds_total / (self.sleep_period + self.record_secs)
+        df = self.collect_n_soundamps(n=int(num_periods))
+        self.smooth_transform_write(df, 'average_amplitude')
+        df = df.reset_index()
+        data = []
+        frame_length = self.record_secs / self.frames_to_record
+        for start_time, full_amplitude in df[['start_time', 'full_amplitude']].values.tolist():
+            for i, v in enumerate(full_amplitude):
+                data.append([start_time + i * frame_length, v])
+        df_full = pd.DataFrame(data, columns=['start_time', 'actual amplitude'])
+        self.smooth_transform_write(df_full, 'actual amplitude')
+
+    def smooth_transform_write(self, df, col):
+        if not os.path.exists('audio_graphs\\%s'):
+            os.makedirs('audio_graphs\\%s')
+        df = df.set_index('start_time')
+        df_aa = self.smooth_graph(df, col)
+        df_aa.plot(figsize=(25, 15))
+        plt.savefig('audio_graphs\\%s\\_%s_(%s).png' % (self.name, col, str(time.time()).split('.')[0]))
+
+        df['log_%s' % col] = df[col].apply(lambda x: math.log(x))
+        df_laa = self.smooth_graph(df, 'log_%s' % col)
+        df_laa.plot(figsize=(25, 15))
+        plt.savefig('audio_graphs\\%s\\_log_%s_(%s).png' % (self.name, col, str(time.time()).split('.')[0]))
+
+    @staticmethod
+    def smooth_graph(df, col):
+        df['%s_smoothed_gaussian_1' % col] = gaussian_filter1d(df[col], 1)
+        df['%s_smoothed_gaussian_2' % col] = gaussian_filter1d(df[col], 2)
+        df['%s_smoothed_gaussian_4' % col] = gaussian_filter1d(df[col], 4)
+        return df[['%s_smoothed_gaussian_1' % col, '%s_smoothed_gaussian_2' % col, '%s_smoothed_gaussian_4' % col]]
+
+
