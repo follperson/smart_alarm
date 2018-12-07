@@ -38,7 +38,7 @@ class SoundRecorderAnalyzer(object):
         buffer = mic_name + '_' + str(dt.datetime.now()).split('.')[0].replace(':', '.')
         self.name = name + '_' + buffer
         if self.to_record:
-            os.makedirs('audio_records\\%s')
+            os.makedirs('audio_records\\%s' % self.name)
 
     def check_name(self):
         for ii in range(self.audio.get_device_count()):
@@ -77,8 +77,8 @@ class SoundRecorderAnalyzer(object):
         self.stream.close()
         self.audio.terminate()
         df = pd.DataFrame(data, columns=['index', 'start_time', 'average_amplitude', 'full_amplitude'])
-        if not os.path.exists('data_collection\\%s'):
-            os.makedirs('data_collection\\%s')
+        if not os.path.exists('data_collection\\%s' % self.name):
+            os.makedirs('data_collection\\%s'  % self.name)
         df.to_csv('data_collection\\%s\\data_collection_raw.csv' % self.name)
         return df
 
@@ -94,26 +94,26 @@ class SoundRecorderAnalyzer(object):
             for i, v in enumerate(full_amplitude):
                 data.append([start_time + i * frame_length, v])
         df_full = pd.DataFrame(data, columns=['start_time', 'actual amplitude'])
-        self.smooth_transform_write(df_full, 'actual amplitude')
+        self.smooth_transform_write(df_full, 'actual amplitude',self.record_secs)
 
-    def smooth_transform_write(self, df, col):
-        if not os.path.exists('audio_graphs\\%s'):
-            os.makedirs('audio_graphs\\%s')
+    def smooth_transform_write(self, df, col, multiplier=1):
+        if not os.path.exists('audio_graphs\\' + self.name):
+            os.makedirs('audio_graphs\\' + self.name)
         df = df.set_index('start_time')
-        df_aa = self.smooth_graph(df, col)
+        df_aa = self.smooth_graph(df, col, multiplier=multiplier)
         df_aa.plot(figsize=(25, 15))
         plt.savefig('audio_graphs\\%s\\_%s_(%s).png' % (self.name, col, str(time.time()).split('.')[0]))
 
         df['log_%s' % col] = df[col].apply(lambda x: math.log(x))
-        df_laa = self.smooth_graph(df, 'log_%s' % col)
+        df_laa = self.smooth_graph(df, 'log_%s' % col, multiplier=multiplier)
         df_laa.plot(figsize=(25, 15))
         plt.savefig('audio_graphs\\%s\\_log_%s_(%s).png' % (self.name, col, str(time.time()).split('.')[0]))
 
     @staticmethod
-    def smooth_graph(df, col):
-        df['%s_smoothed_gaussian_1' % col] = gaussian_filter1d(df[col], 1)
-        df['%s_smoothed_gaussian_2' % col] = gaussian_filter1d(df[col], 2)
-        df['%s_smoothed_gaussian_4' % col] = gaussian_filter1d(df[col], 4)
+    def smooth_graph(df, col, multiplier):
+        df['%s_smoothed_gaussian_1' % col] = gaussian_filter1d(df[col], 1*multiplier)
+        df['%s_smoothed_gaussian_2' % col] = gaussian_filter1d(df[col], 2*multiplier)
+        df['%s_smoothed_gaussian_4' % col] = gaussian_filter1d(df[col], 4*multiplier)
         return df[['%s_smoothed_gaussian_1' % col, '%s_smoothed_gaussian_2' % col, '%s_smoothed_gaussian_4' % col]]
 
 
