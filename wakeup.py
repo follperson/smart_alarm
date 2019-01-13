@@ -18,7 +18,7 @@ def record_ready(num_hours=1, to_record=False, name=SoundRecorderAnalyzer.Names.
 
 
 def alarm():
-    time_til_wake = get_wake_time(7.1)
+    time_til_wake = get_wake_time(7)
     record_ready(time_til_wake, False, name=SoundRecorderAnalyzer.Names.SLEEPING)
 
 
@@ -33,6 +33,5 @@ def read_aloud():
 
 
 if __name__ == '__main__':
-    record_ready()
-    record_ready()
-    record_ready()
+    # record_ready()
+    alarm()

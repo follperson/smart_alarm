@@ -4,7 +4,6 @@ import audioop
 import pandas as pd
 import time
 import matplotlib.pyplot as plt
-from scipy.signal import savgol_filter
 import datetime as dt
 from scipy.ndimage.filters import gaussian_filter1d
 import os
@@ -94,6 +93,7 @@ class SoundRecorderAnalyzer(object):
             for i, v in enumerate(full_amplitude):
                 data.append([start_time + i * frame_length, v])
         df_full = pd.DataFrame(data, columns=['start_time', 'actual amplitude'])
+        df_full.loc[df_full['actual amplitude'] == 0, 'actual amplitude'] = 1
         self.smooth_transform_write(df_full, 'actual amplitude',self.record_secs)
 
     def smooth_transform_write(self, df, col, multiplier=1):
@@ -102,12 +102,12 @@ class SoundRecorderAnalyzer(object):
         df = df.set_index('start_time')
         df_aa = self.smooth_graph(df, col, multiplier=multiplier)
         df_aa.plot(figsize=(25, 15))
-        plt.savefig('audio_graphs\\%s\\_%s_(%s).png' % (self.name, col, str(time.time()).split('.')[0]))
+        plt.savefig('audio_graphs\\%s\\%s_(%s).png' % (self.name, col, str(time.time()).split('.')[0]))
 
         df['log_%s' % col] = df[col].apply(lambda x: math.log(x))
         df_laa = self.smooth_graph(df, 'log_%s' % col, multiplier=multiplier)
         df_laa.plot(figsize=(25, 15))
-        plt.savefig('audio_graphs\\%s\\_log_%s_(%s).png' % (self.name, col, str(time.time()).split('.')[0]))
+        plt.savefig('audio_graphs\\%s\\log_%s_(%s).png' % (self.name, col, str(time.time()).split('.')[0]))
 
     @staticmethod
     def smooth_graph(df, col, multiplier):
