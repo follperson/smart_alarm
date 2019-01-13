@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<title>{% block title %}{% endblock %} - alarm</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+<nav>
+  <h1>homemade alarm</h1>
+  <ul>
+    <li><a href="{{ url_for('alarm.create_alarm') }}">Create Alarm</a></li>
+      <li><a href="{{ url_for('alarm.view_alarms') }}">View/Modify Alarms</a></li>
+      <li><a href="{{ url_for('alarm.update_alarm') }}">Update Alarms</a></li>
+      <li><a href="{{ url_for('alarm.create_sound_profile') }}">Create Sound Profile</a></li>
+      <li><a href="{{ url_for('alarm.create_color_profile') }}">Create Color Profile</a></li>
+  </ul>
+</nav>
+<section class="content">
+  <header>
+    {% block header %}{% endblock %}
+  </header>
+  {% for message in get_flashed_messages() %}
+    <div class="flash">{{ message }}</div>
+  {% endfor %}
+  {% block content %}{% endblock %}
+</section>
+</html>

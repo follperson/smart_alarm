@@ -1,0 +1,10 @@
+{% extends 'base.html' %}
+
+{% block header %}
+  <h1>{% block title %}Success {{ params['action'] }}{% endblock %}</h1>
+{% endblock %}
+
+{% block content %}
+  <div>Congratulations! You have successfully <strong>{{params['action']}}</strong> with {{params['name']}}</div>
+  <div>If you wish to return to return and again {{params['action']}}, <a href="{{params['return']}}">please click here</a></div>
+{% endblock %}
