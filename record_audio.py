@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 import datetime as dt
 from scipy.ndimage.filters import gaussian_filter1d
 import os
-import math
+import numpy as np
 
 
 class SoundRecorderAnalyzer(object):
@@ -87,7 +87,7 @@ class SoundRecorderAnalyzer(object):
         num_periods = seconds_total / (self.sleep_period + self.record_secs)
         df = self.collect_n_soundamps(n=int(num_periods))
         self.smooth_transform_write(df, 'average_amplitude')
-        self.construct_rolling_volume(df, 'average_amplitude', rolling_window)
+        # self.construct_rolling_volume(df, 'average_amplitude', rolling_window)
         data = []
         frame_length = self.record_secs / self.frames_to_record
         for start_time, full_amplitude in df[['start_time', 'full_amplitude']].values.tolist():
@@ -95,29 +95,30 @@ class SoundRecorderAnalyzer(object):
                 data.append([start_time + i * frame_length, v])
         df_full = pd.DataFrame(data, columns=['start_time', 'actual amplitude'])
         self.smooth_transform_write(df_full, 'actual amplitude', 2 * self.record_secs)
-        self.construct_rolling_volume(df_full, 'actual amplitude', rolling_window * self.frames_to_record)
+        # self.construct_rolling_volume(df_full, 'actual amplitude', rolling_window * self.frames_to_record)
 
 
-    def smooth_transform_write(self, df, col, multiplier=1):
+    def smooth_transform_write(self, df, col, multiplier=1, datetime_index=True):
         if not os.path.exists('audio_graphs\\' + self.name):
             os.makedirs('audio_graphs\\' + self.name)
-
-        df.index = pd.DatetimeIndex((df['start_time'] - 60 * 60 * 5) * 10 ** 9)
-
+        if datetime_index:
+            df.index = pd.DatetimeIndex((df['start_time'] - 3600 * 5) * 10 ** 9)  # utc offset, convert from sec to nano
         df_aa = self.smooth_graph(df, col, multiplier=multiplier)
-        df_aa.plot(figsize=(25, 15))
+        df_aa.plot(figsize=(50, 30))
         plt.savefig('audio_graphs\\%s\\%s_(%s).png' % (self.name, col, str(time.time()).split('.')[0]))
 
-        df['log_%s' % col] = df[col].apply(lambda x: math.log(x))
+        df.loc[df[col] == 0, col] = 1
+        df['log_%s' % col] = np.log(df[col])
         df_laa = self.smooth_graph(df, 'log_%s' % col, multiplier=multiplier)
-        df_laa.plot(figsize=(25, 15))
+        df_laa.plot(figsize=(50, 30))
         plt.savefig('audio_graphs\\%s\\log_%s_(%s).png' % (self.name, col, str(time.time()).split('.')[0]))
 
     def construct_rolling_volume(self,df, col, window_base):
         df[col + '_rolling_' + str(window_base)] = df[col].rolling(window=window_base).sum() / window_base
         df[col + '_rolling_' + str(window_base * 2)] = df[col].rolling(window=window_base * 2).sum() / (2*window_base )
         df[col + '_rolling_' + str(window_base * 4)] = df[col].rolling(window=window_base * 4).sum() / (4*window_base)
-        df[[col + '_rolling_' + str(window_base), col + '_rolling_' + str(window_base *2), col + '_rolling_' + str(window_base *4)]].plot(figsize=(25, 15))
+        df[[col + '_rolling_' + str(window_base), col + '_rolling_' + str(window_base * 2),
+            col + '_rolling_' + str(window_base * 4)]].plot(figsize=(50, 30))
         plt.savefig('audio_graphs\\%s\\%s_rolling_(%s).png' % (self.name, col, str(time.time()).split('.')[0]))
 
     @staticmethod
