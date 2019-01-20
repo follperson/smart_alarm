@@ -85,6 +85,7 @@ class SoundRecorderAnalyzer(object):
         seconds_total = num_hours * 60 * 60
         rolling_window = 5*60 // (self.record_secs + self.sleep_period) # x min window (x min / time record period)
         num_periods = seconds_total / (self.sleep_period + self.record_secs)
+        print(num_periods)
         df = self.collect_n_soundamps(n=int(num_periods))
         self.smooth_transform_write(df, 'average_amplitude')
         # self.construct_rolling_volume(df, 'average_amplitude', rolling_window)

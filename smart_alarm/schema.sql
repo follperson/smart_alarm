@@ -1,6 +1,9 @@
 DROP TABLE IF EXISTS alarms;
 DROP TABLE IF EXISTS color_profiles;
 DROP TABLE IF EXISTS sound_profiles;
+DROP TABLE IF EXISTS songs;
+DROP TABLE IF EXISTS playlists;
+DROP TABLE IF EXISTS playlist;
 
 
 CREATE TABLE alarms (
@@ -32,4 +35,27 @@ CREATE TABLE sound_profiles (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   time_span INTEGER NOT NULL,
   name TEXT NOT NULL
+);
+
+CREATE TABLE songs (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  filepath TEXT NOT NULL,
+  filename TEXT NOT NULL,
+  name TEXT NOT NULL,
+  album TEXT,
+  artist TEXT,
+  hash TEXT KEY,
+  duration FlOAT NOT NULL
+);
+
+CREATE TABLE playlists (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  name TEXT NOT NULL,
+);
+
+CREATE TABLE playlist (
+  playlist_id INTEGER PRIMARY KEY not null,
+  song integer,
+  foreign key (playlist_id) references playlists(id),
+  foreign key (song) references songs(id)
 );
