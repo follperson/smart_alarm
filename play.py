@@ -2,32 +2,36 @@ from pydub import AudioSegment
 from pydub.utils import make_chunks
 from pyaudio import PyAudio
 from threading import Thread
-from math import ceil
+#from smart_alarm.db import get_db
+import pandas as pd
 SECOND = 1000
 
-#
-#
-# def make_chunks(audio_segment, chunk_length):
-#     """
-#     Breaks an AudioSegment into chunks that are <chunk_length> milliseconds
-#     long.
-#     if chunk_length is 50 then you'll get a list of 50 millisecond long audio
-#     segments back (except the last one, which can be shorter)
-#     """
-#     number_of_chunks = ceil(len(audio_segment) / float(chunk_length))
-#     return [audio_segment[i * chunk_length:(i + 1) * chunk_length]
-#             for i in range(int(number_of_chunks))]
+
+def get_playlist(name):
+    df = pd.read_csv('assets\\playlists\\playlists.csv')
+    df_songs = pd.read_csv('assets\\playlists\\songs.csv')
+    playlist = pd.merge(df.loc[df['name'] == name][['filepath']], df_songs, how='left',on='filepath')
+    # playlist = playlist.sort_values('order')
+    return playlist
+
+# todo change the way that the sound rises over time
+
 
 class Song(Thread):
-    def __init__(self, f, *args, **kwargs):
+    def __init__(self, f, min_vol=-60, max_vol=0, *args, **kwargs):
         self.seg = AudioSegment.from_file(f)
         self.__is_paused = True
         self.p = PyAudio()
+        self.cur_vol = min_vol
+        self.max_vol = max_vol
         Thread.__init__(self, *args, **kwargs)
         self.start()
 
     def pause(self):
         self.__is_paused = True
+
+    def quit(self):
+        self.p.terminate()
 
     def play(self):
         self.__is_paused = False
@@ -42,32 +46,29 @@ class Song(Thread):
         stream = self.__get_stream()
         chunk_count = 0
         chunks = make_chunks(self.seg, 100)
-        maxvol = 0
-        minvol = -60
-        incr = abs(maxvol - minvol) / len(chunks)
-        vol = minvol
+        increment = abs(self.max_vol - self.cur_vol) / len(chunks)
+        print('Running song ', self.cur_vol)
         while chunk_count <= len(chunks):
             if not self.__is_paused:
-                cur_chunk = chunks[chunk_count] + vol
+                try:
+                    cur_chunk = chunks[chunk_count] + self.cur_vol
+                except IndexError as why:
+                    print('isue in chunk counts. at %s, out of total %s' %(chunk_count, len(chunk_count)))
+                    break
                 data = cur_chunk._data
                 chunk_count += 1
-                vol -= incr
+                self.cur_vol += increment
             else:
                 free = stream.get_write_available()
                 data = chr(0) * free
-            # try:
             stream.write(data)
-            # except OSError as soundfucked:
-            #     print(soundfucked)
-                # vol += incr
-                # chunk_count -= 1
 
         stream.stop_stream()
         self.p.terminate()
 
 
 def main():
-    example_song = r"C:\Users\follm\Downloads\torrents\audio\Brian Eno - Ambient 1 Music for Airports Electronic\Brian Eno - Ambient 1 Music for Airports [FLAC-Lossless]\01 Brian Eno - 1-1.flac"
+    example_song = ''
     song = Song(example_song)
     song.play()
 

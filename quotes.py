@@ -16,14 +16,14 @@ def get_forecast_entry(table):
 
 def get_weather_nws():
     page = get('https://forecast.weather.gov/MapClick.php?textField1=38.96&textField2=-77.03')
-    soup = BeautifulSoup(page.content)
+    soup = BeautifulSoup(page.content, features='html.parser')
     detail_forecast_table = soup.find('div', {'id': 'detailed-forecast-body'})
     today = get_forecast_entry(detail_forecast_table)
     if today is None:
         print('Cannot find today info on NWS website')
         raise FileNotFoundError
     long_text = today.find_next('div').text
-    long_text = 'Good Morning Alex and andy! Stay tuned for Today\'s forecast, which is:. ' + long_text
+    long_text = 'Good Morning Alex and andy! Stay tuned for today\'s forecast, which is:. ' + long_text
     return long_text
 
 

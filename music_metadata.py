@@ -2,6 +2,7 @@ from tinytag import TinyTag
 import os
 import pandas as pd
 
+
 def scan_directory(root='assets'):
     music_exts = ['mp3', 'flac', 'ogg']
     data = []
@@ -14,5 +15,10 @@ def scan_directory(root='assets'):
                 data.append([fp, f] + track_info)
     return pd.DataFrame(data, columns=['filepath','filename','song','album','artist','length'])
 
+def update_songs():
+    df = scan_directory()
+    df.to_csv('assets\\playlists\\songs.csv')
+
 if __name__ == '__main__':
-    print(scan_directory().iloc[:,2:])
+    # print(scan_directory().iloc[:,2:])
+    update_songs()
