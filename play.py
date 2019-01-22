@@ -18,12 +18,15 @@ def get_playlist(name):
 
 
 class Song(Thread):
-    def __init__(self, f, min_vol=-60, max_vol=0, *args, **kwargs):
+    def __init__(self, f, min_vol=-60, max_vol=0, start_sec=0, end_sec=6000, *args, **kwargs):
         self.seg = AudioSegment.from_file(f)
+        self.seg = self.seg[start_sec*1000:end_sec*1000]
         self.__is_paused = True
         self.p = PyAudio()
         self.cur_vol = min_vol
         self.max_vol = max_vol
+        self.start_sec = start_sec
+        self.end_sec = end_sec
         Thread.__init__(self, *args, **kwargs)
         self.start()
 
@@ -47,14 +50,10 @@ class Song(Thread):
         chunk_count = 0
         chunks = make_chunks(self.seg, 100)
         increment = abs(self.max_vol - self.cur_vol) / len(chunks)
-        print('Running song ', self.cur_vol)
-        while chunk_count <= len(chunks):
+        print('cur vol:', self.cur_vol)
+        while chunk_count <= len(chunks) - 1:
             if not self.__is_paused:
-                try:
-                    cur_chunk = chunks[chunk_count] + self.cur_vol
-                except IndexError as why:
-                    print('isue in chunk counts. at %s, out of total %s' %(chunk_count, len(chunk_count)))
-                    break
+                cur_chunk = chunks[chunk_count] + self.cur_vol
                 data = cur_chunk._data
                 chunk_count += 1
                 self.cur_vol += increment

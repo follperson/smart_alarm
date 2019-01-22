@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+
+{% block header %}
+  <h1>{% block title %}Home{% endblock %}</h1>
+{% endblock %}
+
+{% block content %}
+<table>
+    <thead>
+    <tr>
+    {% for col in df_alarms.columns %}
+        <th>{{col}}</th>
+        {% endfor %}
+        <th> Edit </th>
+    </tr>
+    </thead>
+    {% for row in df_alarms.to_dict('records') %}
+    <tr>
+        {% for col in df_alarms.columns %}
+        <td>
+            {{ row[col] }}
+        </td>
+        {% endfor %}
+        <td>
+            <a href="{{ url_for('alarm.update_alarm', id=row['id']) }}">Edit</a>
+        </td>
+    </tr>
+    {% endfor %}
+</table>
+{% endblock %}

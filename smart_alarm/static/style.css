@@ -46,6 +46,7 @@ div.about {
      -moz-border-radius: 6px;
           border-radius: 6px;
 }
+
 h2 {
   font-size: 3em;
   margin-top: 40px;
@@ -73,4 +74,7 @@ h3 {
 .menu li a {
   color: #444;
   text-decoration: none;
+}
+td, th, tr {
+border: solid 1px black;
 }

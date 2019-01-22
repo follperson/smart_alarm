@@ -3,16 +3,17 @@ from quotes import get_weather_nws, get_weather_owm, get_quote
 from record_audio import SoundRecorderAnalyzer
 from play import Song, get_playlist
 from threading import Thread
+from math import ceil
 import datetime as dt
 import time
 
 
-def get_wake_time(wakeup_hour=7):
+def get_wake_time(wakeup_hour=7.):
     tomorrow = dt.datetime(dt.datetime.now().year, dt.datetime.now().month, dt.datetime.now().day) + dt.timedelta(1,60 * 60 * wakeup_hour)
     return (tomorrow - dt.datetime.now()).seconds / 60 / 60
 
 
-def record_ready(num_hours=1, to_record=False, name=SoundRecorderAnalyzer.Names.WORK, record_period=10):
+def record_ready(num_hours=1., to_record=False, name=SoundRecorderAnalyzer.Names.WORK, record_period=10):
     sleep_period = 0
     sound_recorder = SoundRecorderAnalyzer(name, record_secs=record_period, sleep_period=sleep_period, to_record=to_record)
     sound_recorder.record_hours(num_hours=num_hours)
@@ -39,22 +40,29 @@ def record_ready_slowroll(num_hours=1, to_record=False, name=SoundRecorderAnalyz
     read_aloud()
 
 
-def slow_alarm(playlist_name, num_hours, min_vol=-60, max_vol=0):
+def slow_alarm(playlist_name, num_hours, min_vol=-60, max_vol=0, max_time=10**10):
+    time_left = max_time # in seconds
     vol = min_vol
     vol_change_total = abs(max_vol - vol)
     playlist = get_playlist(playlist_name)
     total_secs = playlist['length'].sum()
-    # todo turn this sleep into somtn else so i can say stopp and start wakeup now
+    if total_secs > max_time:
+        total_secs = max_time
+    # todo turn this sleep into a loop which checks for input, so i can say stop calm sounds and start wakeup now
     wakeup_buffer = num_hours * 60 * 60 - total_secs
     if wakeup_buffer < 0:
         wakeup_buffer = 0
     time.sleep(wakeup_buffer)
-    for fp, duration in playlist[['filepath', 'length']].values:
-        print(fp, duration)
+
+    for fp, duration in playlist[['filepath', 'length']].values:  # add start and end times to the playlist feature (soundprofile= plalist??)
+        print(fp)
+        if duration > time_left:
+            duration = time_left
         local_max = vol + vol_change_total * duration / total_secs
-        song = Song(fp, min_vol=vol, max_vol=local_max)
+        song = Song(fp, min_vol=vol, max_vol=local_max, start_sec=0, end_sec=ceil(duration))
         song.play()
         time.sleep(duration)  # song plays on separate thread
+        time_left = total_secs - ceil(duration)
         vol = local_max
     read_aloud()
 
@@ -63,12 +71,15 @@ def slow_alarm(playlist_name, num_hours, min_vol=-60, max_vol=0):
 # button to stop alarm and good morning  (press first one twice)
 
 
-def alarm(waketime=7, playlist_name='Huerco S'):
+def alarm(waketime=7., playlist_name='Huerco S', wake_window=10):
     num_hours = get_wake_time(waketime)
+    print(num_hours)
     name = SoundRecorderAnalyzer.Names.SLEEPING
-    recorder = Thread(target=record_ready, kwargs={'name':name, 'num_hours':num_hours})
-    recorder.start()
-    slow_alarm(playlist_name, num_hours=num_hours)
+    record_time = num_hours - wake_window / 60
+    if record_time > 0:
+        recorder = Thread(target=record_ready, kwargs={'name':name, 'num_hours':record_time})
+        recorder.start()
+    slow_alarm(playlist_name, num_hours=num_hours, max_time=wake_window * 60)
 
 
 def read_aloud():
@@ -84,8 +95,8 @@ def read_aloud():
 def main():
     # playlist_name = 'Eno 1'
     # playlist_name = 'Elliot Smith Either Or'
-    # playlist_name = 'Bird Songs'
-    alarm(waketime=9)
+    playlist_name = 'Bird Songs'
+    alarm(waketime=8.9, playlist_name=playlist_name)
 
 
 if __name__ == '__main__':

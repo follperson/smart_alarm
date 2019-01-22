@@ -33,8 +33,8 @@ def create_app(test_config=None):
     from . import db
     db.init_app(app)
 
-    from . import alarm
-    app.register_blueprint(alarm.bp)
+    from . import alarm_setup
+    app.register_blueprint(alarm_setup.bp)
 
 
     return app

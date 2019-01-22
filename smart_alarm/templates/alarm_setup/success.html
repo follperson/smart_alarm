@@ -7,4 +7,5 @@
 {% block content %}
   <div>Congratulations! You have successfully <strong>{{params['action']}}</strong> with {{params['name']}}</div>
   <div>If you wish to return to return and again {{params['action']}}, <a href="{{params['return']}}">please click here</a></div>
+  <div>If you wish to see the list of created alarm profiles, <a href="{{ url_for('alarm.view_alarms') }}">please click here</a></div>
 {% endblock %}
