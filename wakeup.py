@@ -58,6 +58,8 @@ def slow_alarm(playlist_name, num_hours, min_vol=-60, max_vol=0, max_time=10**10
         print(fp)
         if duration > time_left:
             duration = time_left
+        if ceil(duration) == 0:
+            break
         local_max = vol + vol_change_total * duration / total_secs
         song = Song(fp, min_vol=vol, max_vol=local_max, start_sec=0, end_sec=ceil(duration))
         song.play()
@@ -71,7 +73,7 @@ def slow_alarm(playlist_name, num_hours, min_vol=-60, max_vol=0, max_time=10**10
 # button to stop alarm and good morning  (press first one twice)
 
 
-def alarm(waketime=7., playlist_name='Huerco S', wake_window=10):
+def alarm(waketime=7., playlist_name='Huerco S', wake_window=15):
     num_hours = get_wake_time(waketime)
     print(num_hours)
     name = SoundRecorderAnalyzer.Names.SLEEPING
@@ -93,11 +95,10 @@ def read_aloud():
 
 
 def main():
-    # playlist_name = 'Eno 1'
+    playlist_name = 'Eno 1'
     # playlist_name = 'Elliot Smith Either Or'
-    playlist_name = 'Bird Songs'
-    alarm(waketime=8.9, playlist_name=playlist_name)
-
+    # playlist_name = 'Bird Songs'
+    alarm(waketime=6, playlist_name=playlist_name)
 
 if __name__ == '__main__':
     main()

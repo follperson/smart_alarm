@@ -34,28 +34,33 @@ CREATE TABLE color_profiles (
 CREATE TABLE sound_profiles (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   time_span INTEGER NOT NULL,
-  name TEXT NOT NULL
+  name TEXT NOT NULL,
+  playlist_id integer not null,
+  foreign key (playlist_id) references playlists(id)
 );
 
-CREATE TABLE songs (
+CREATE TABLE audio (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   filepath TEXT NOT NULL,
   filename TEXT NOT NULL,
   name TEXT NOT NULL,
   album TEXT,
   artist TEXT,
-  hash TEXT KEY,
+  hash TEXT KEY not null,
   duration FlOAT NOT NULL
 );
 
 CREATE TABLE playlists (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
-  name TEXT NOT NULL,
+  name TEXT NOT NULL
 );
 
 CREATE TABLE playlist (
   playlist_id INTEGER PRIMARY KEY not null,
-  song integer,
+  audio_id integer,
+  audio_start integer,
+  audio_end integer,
+  playlist_order integer,
   foreign key (playlist_id) references playlists(id),
-  foreign key (song) references songs(id)
+  foreign key (audio_id) references audio(id)
 );

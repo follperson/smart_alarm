@@ -9,7 +9,7 @@ import os
 from .db import get_db
 
 
-bp = Blueprint('alarm', __name__, url_prefix='/alarm')
+bp = Blueprint('alarm', __name__, url_prefix='/alarm_setup')
 
 
 
@@ -68,6 +68,7 @@ def create_alarm():
                            sound_profile=sound_profile, color_profile=color_profile, active=active,
                            sound_profiles=sound_profiles, color_profiles=color_profiles)
 
+# warn if multiple overlappign alarms
 
 #TODO: view = create/read/update/delete home
 @bp.route('/<int:id>/update/', methods=('GET', 'POST'))
