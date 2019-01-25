@@ -10,6 +10,8 @@ from .db import get_db
 
 
 bp = Blueprint('alarm_live', __name__, url_prefix='/alarm')
+pass
+
 
 
 

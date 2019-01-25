@@ -1,0 +1,47 @@
+{% extends 'base.html' %}
+
+{% block header %}
+  <h1>{% block title %}Modify Playlist {{name}}{% endblock %}</h1>
+{% endblock %}
+
+{% block content %}
+  <form method="post">
+
+<table>
+    <thead>
+    <tr>
+    {% for col in cols_to_show %}
+        <th>{{col}}</th>
+    {% endfor %}
+        <th> Update </th>
+    </tr>
+    </thead>
+    {% for row in df.to_dict('records') %}
+    <tr>
+        {% for col in cols_to_show%}
+        <td>
+            {% if col in int_cols %}
+                {% if row[col] == '' %}
+                    <input type="number" name="{{row['audio_id']}}_{{col}}" value="{{row['audio_id']}}_{{col}}" max="{{row['duration']}}">
+                {% else %}
+                    <input type="number" value="{{row['audio_id']}}_{{row[col]}}" max="{{row['duration']}}">
+                {% endif %}
+            {% else %}
+                {{ row[col] }}
+            {% endif %}
+        </td>
+        {% endfor %}
+        <td>
+            {% if row['playlist_order'] != '' %}
+            <input type="checkbox" name="update_id" value="update_{{row['audio_id']}}" checked>
+            {% else %}
+            <input type="checkbox" name="update_id" value="{{row['audio_id']}}">
+            {% endif %}
+        </td>
+    </tr>
+    {% endfor %}
+</table>
+<button value="submit" name="submit">SUBMIT CHANGES</button>
+<button value="cancel" name="cancel">CANCEL CHANGES</button>
+  </form>
+      {% endblock %}

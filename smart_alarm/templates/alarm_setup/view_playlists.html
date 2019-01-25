@@ -5,9 +5,6 @@
 {% endblock %}
 
 {% block content %}
-{% if df.empty %}
-<div> No alarms created! Would you like to <a href={{url_for('alarm_setup.create_alarm')> create one? </a></div>
-{% else %}
 <table>
     <thead>
     <tr>
@@ -25,10 +22,10 @@
         </td>
         {% endfor %}
         <td>
-            <a href="{{ url_for('alarm.update_alarm', id=row['id']) }}">Edit</a>
+            <a href="{{ url_for('alarm_setup.view_playlist', id=row['id']) }}">View</a>
         </td>
     </tr>
     {% endfor %}
 </table>
-{% endif %}
+<span><a href={{url_for('alarm_setup.create_playlist')}}> Create Playlist? </a></span>
 {% endblock %}

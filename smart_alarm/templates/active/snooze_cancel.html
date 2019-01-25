@@ -1,26 +1,16 @@
-<!DOCTYPE html>
+{% extends 'base.html' %}
 
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>SNOOZE / CANCEL</title>
-    <style>
-      input {
-      background-color: red;
-      border: black;
-      color: white;
-      padding: 15px 32px;
-      text-align: center;
-      text-decoration: none;
-      display: inline-block;
-      font-size: 40px;
-      }
-    </style>
-</head>
-<body>
-<input type="button" id="cancel" value="TURN OFF ALARM">
-<input type="button" id="snooze1" value="TRUE SNOOZE">
-<input type="button" id="snooze2" value="SNOOZE & RESET">
-<input type="button" id="snooze3" value="FALSE SNOOZE">
-</body>
-</html>
+{% block header %}
+  <h1>{% block title %}Snooze/Cancel Alarm{% endblock %}</h1>
+{% endblock %}
+
+{% block content %}
+    {% if any(active) %}
+        <input style="color: black; background-color: red; text-align: center; font-size: 50px;" type="button" id="cancel" value="TURN OFF ALARM">
+        <input style="color: black; background-color: orange; text-align: center; font-size: 50px;" type="button" id="snooze1" value="FALSE SNOOZE">
+        <input style="color: black; background-color: red; text-align: center; font-size: 50px;" type="button" id="snooze2" value="TRUE SNOOZE">
+        <input style="color: black; background-color: orange; text-align: center; font-size: 50px;" type="button" id="snooze3" value="SNOOZE & RESET">
+    {% else %}
+        <p>There are no active alarms</p>
+    {% endif %}
+{% endblook %}

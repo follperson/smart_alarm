@@ -1,20 +1,17 @@
 {% extends 'base.html' %}
 
 {% block header %}
-  <h1>{% block title %}Home{% endblock %}</h1>
+  <h1>{% block title %}View Playlist {{name}}{% endblock %}</h1>
 {% endblock %}
 
 {% block content %}
-{% if df.empty %}
-<div> No alarms created! Would you like to <a href={{url_for('alarm_setup.create_alarm')> create one? </a></div>
-{% else %}
 <table>
     <thead>
     <tr>
     {% for col in df.columns %}
         <th>{{col}}</th>
         {% endfor %}
-        <th> Edit </th>
+        <th> Remove </th>
     </tr>
     </thead>
     {% for row in df.to_dict('records') %}
@@ -25,10 +22,12 @@
         </td>
         {% endfor %}
         <td>
-            <a href="{{ url_for('alarm.update_alarm', id=row['id']) }}">Edit</a>
+            <button type="submit" name="remove" value="{{row[id]}}">Remove Song</button>
         </td>
     </tr>
     {% endfor %}
 </table>
-{% endif %}
+<span><a href="{{url_for('alarm_setup.modify_playlist', id=id)}}">Modify Playlist?</a></span>
+<span><a href="{{url_for('alarm_setup.create_playlist')}}">Create New Playlist?</a></span>
+
 {% endblock %}

@@ -98,7 +98,8 @@ def main():
     playlist_name = 'Eno 1'
     # playlist_name = 'Elliot Smith Either Or'
     # playlist_name = 'Bird Songs'
-    alarm(waketime=6, playlist_name=playlist_name)
+    alarm(waketime=7.1, playlist_name=playlist_name)
 
 if __name__ == '__main__':
+    # SoundRecorderAnalyzer().check_name()
     main()

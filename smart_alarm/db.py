@@ -25,9 +25,18 @@ def close_db(e=None):
 
 def init_db():
     db = get_db()
+    import pandas as pd
+    import sys
+    sys.path.append(r'C:\Users\follm\Documents\coding\smart_alarm_clock')
+    import music_metadata
 
     with current_app.open_resource('schema.sql') as f:
         db.executescript(f.read().decode('utf8'))
+    db = get_db()
+    df = music_metadata.scan_directory()
+    df.to_sql('audio',con=db,if_exists='append',index=False)
+    # with current_app.open_resource('initial_insert.sql') as f:
+    #     db.executescript(f.read().decode('utf8'))
 
 
 @click.command('init-db')

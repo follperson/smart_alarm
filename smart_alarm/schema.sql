@@ -1,13 +1,13 @@
 DROP TABLE IF EXISTS alarms;
 DROP TABLE IF EXISTS color_profiles;
 DROP TABLE IF EXISTS sound_profiles;
-DROP TABLE IF EXISTS songs;
+DROP TABLE IF EXISTS audio;
 DROP TABLE IF EXISTS playlists;
 DROP TABLE IF EXISTS playlist;
 
 
 CREATE TABLE alarms (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
   created TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   name TEXT NOT NULL,
   alarm_time TIME NOT NULL,
@@ -21,29 +21,21 @@ CREATE TABLE alarms (
   repeat_sunday BOOLEAN NOT NULL DEFAULT FALSE,
   sound_profile INTEGER NOT NULL DEFAULT 1,
   color_profile INTEGER NOT NULL DEFAULT 1,
-  FOREIGN KEY (sound_profile) REFERENCES sound_profiles(id),
+  FOREIGN KEY (sound_profile) REFERENCES playlists(id),
   FOREIGN KEY (color_profile) REFERENCES color_profiles(id)
 );
 
 CREATE TABLE color_profiles (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
   time_span INTEGER NOT NULL,
   name TEXT NOT NULL
 );
 
-CREATE TABLE sound_profiles (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  time_span INTEGER NOT NULL,
-  name TEXT NOT NULL,
-  playlist_id integer not null,
-  foreign key (playlist_id) references playlists(id)
-);
-
 CREATE TABLE audio (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
   filepath TEXT NOT NULL,
   filename TEXT NOT NULL,
-  name TEXT NOT NULL,
+  name TEXT,
   album TEXT,
   artist TEXT,
   hash TEXT KEY not null,
@@ -51,12 +43,12 @@ CREATE TABLE audio (
 );
 
 CREATE TABLE playlists (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
   name TEXT NOT NULL
 );
 
 CREATE TABLE playlist (
-  playlist_id INTEGER PRIMARY KEY not null,
+  playlist_id INTEGER NOT NULL PRIMARY KEY,
   audio_id integer,
   audio_start integer,
   audio_end integer,
