@@ -11,3 +11,7 @@ needs website structure fleshed out
 - view -> CRUD on profiles
 - view -> CRUD on alarms
 - view current alarm
+
+must install and make available to path:
+https://avbin.github.io/AVbin/Download.html
+https://www.ffmpeg.org/

@@ -94,7 +94,6 @@ def verify_updates(updates): # generalize / abstract
         for field in fields:
             try:
                 updates[song][field] = int(updates[song][field])
-
             except ValueError as null:
                 updates[song][field] = -1
         if updates[song]['audio_end'] >= updates[song]['audio_start']:
