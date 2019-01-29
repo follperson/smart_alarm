@@ -14,7 +14,7 @@ def get_playlist(name):
     # playlist = playlist.sort_values('order')
     return playlist
 
-# todo change the way that the sound rises over time
+# todo change the way that the sound rises over time - more at end less at beginning
 
 
 class Song(Thread):

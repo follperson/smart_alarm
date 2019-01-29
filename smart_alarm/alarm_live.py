@@ -17,7 +17,7 @@ pass
 
 @bp.route('/')
 def index():
-    return render_template('alarm_setup/index.html')
+    return render_template('alarms/index.html')
 
 @bp.route('/change',methods=['GET','POST'])
 def cancel():

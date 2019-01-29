@@ -1,7 +1,5 @@
 import os
-from flask import Flask
-# from . import db
-# from . import alarm
+from flask import Flask, render_template
 
 
 def create_app(test_config=None):
@@ -26,15 +24,20 @@ def create_app(test_config=None):
         pass
 
     # a simple page that says hello
-    @app.route('/hello')
-    def hello():
-        return 'Hello, World!'
+    @app.route('/')
+    def index():
+        return render_template('alarms/index.html')
 
     from . import db
     db.init_app(app)
 
-    from . import alarm_setup
-    app.register_blueprint(alarm_setup.bp)
+    from . import alarms
+    app.register_blueprint(alarms.bp)
 
+    from . import sound_profiles
+    app.register_blueprint(sound_profiles.bp)
+
+    from . import color_profiles
+    app.register_blueprint(color_profiles.bp)
 
     return app

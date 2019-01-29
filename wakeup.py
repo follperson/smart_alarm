@@ -46,8 +46,8 @@ def slow_alarm(playlist_name, num_hours, min_vol=-60, max_vol=0, max_time=10**10
     vol_change_total = abs(max_vol - vol)
     playlist = get_playlist(playlist_name)
     total_secs = playlist['length'].sum()
-    if total_secs > max_time:
-        total_secs = max_time
+    if total_secs > time_left:
+        total_secs = time_left
     # todo turn this sleep into a loop which checks for input, so i can say stop calm sounds and start wakeup now
     wakeup_buffer = num_hours * 60 * 60 - total_secs
     if wakeup_buffer < 0:
@@ -58,7 +58,7 @@ def slow_alarm(playlist_name, num_hours, min_vol=-60, max_vol=0, max_time=10**10
         print(fp)
         if duration > time_left:
             duration = time_left
-        if ceil(duration) == 0:
+        if ceil(duration) <= 0:
             break
         local_max = vol + vol_change_total * duration / total_secs
         song = Song(fp, min_vol=vol, max_vol=local_max, start_sec=0, end_sec=ceil(duration))
@@ -98,7 +98,8 @@ def main():
     playlist_name = 'Eno 1'
     # playlist_name = 'Elliot Smith Either Or'
     # playlist_name = 'Bird Songs'
-    alarm(waketime=7.1, playlist_name=playlist_name)
+    # alarm(waketime=2`,wake_window=4)#, playlist_name=playlist_name)
+    alarm(waketime=7, wake_window=15, playlist_name=playlist_name)
 
 if __name__ == '__main__':
     # SoundRecorderAnalyzer().check_name()

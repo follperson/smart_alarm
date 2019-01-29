@@ -2,10 +2,9 @@
 <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 <nav>
   <h1>just a little smart ALARM haha</h1>
-    <a href="{{ url_for('alarm_setup.create_alarm') }}">Create Alarm</a>
-    <a href="{{ url_for('alarm_setup.view_alarms') }}">View/Modify Alarms</a>
-    <a href="{{ url_for('alarm_setup.modify_sound_profile') }}">Sound Profile (to be deprecated in favor of plalists)</a>
-    <a href="{{ url_for('alarm_setup.create_color_profile') }}">Create Color Profile</a>
+    <a href="{{ url_for('alarm.view') }}">Alarms</a>
+    <a href="{{ url_for('sound.view') }}">Playlists</a>
+    <a href="{{ url_for('color.view') }}">Color Profiles</a>
 </nav>
 <section class="content">
   <header>

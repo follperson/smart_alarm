@@ -33,9 +33,9 @@
         {% endfor %}
         <td>
             {% if row['playlist_order'] != '' %}
-            <input type="checkbox" name="update_id" value="update_{{row['audio_id']}}" checked>
+            <input type="checkbox" name="update_{{row['audio_id']}}" checked>
             {% else %}
-            <input type="checkbox" name="update_id" value="{{row['audio_id']}}">
+            <input type="checkbox" name="update_{{row['audio_id']}}">
             {% endif %}
         </td>
     </tr>

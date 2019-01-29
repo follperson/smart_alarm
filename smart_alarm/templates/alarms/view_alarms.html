@@ -22,10 +22,13 @@
         </td>
         {% endfor %}
         <td>
-            <a href="{{ url_for('alarm_setup.view_playlist', id=row['id']) }}">View</a>
+            <a href="{{ url_for('alarm.update', id=row['id']) }}">Edit</a>
         </td>
     </tr>
     {% endfor %}
 </table>
-<span><a href={{url_for('alarm_setup.create_playlist')}}> Create Playlist? </a></span>
+<span><a href={{url_for('alarm.create')}}> Create New Alarm? </a></span>
+
+
+
 {% endblock %}

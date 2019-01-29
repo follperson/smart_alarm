@@ -20,22 +20,26 @@ class SoundRecorderAnalyzer(object):
         self.record_secs = record_secs
         self.sleep_period = sleep_period
         self.to_record = to_record
-
+        self.name = name
         self.form_1 = pyaudio.paInt16  # 16-bit resolution
         self.chans = 1  # 1 channel
         self.samp_rate = 44100  # 44.1kHz sampling rate
         self.chunk = 4096  # 2^12 samples for buffer
         self.dev_index = 1  # device index found by p.get_device_info_by_index(ii)
         self.audio = pyaudio.PyAudio()  # create pyaudio instantiation
+        self.frames_to_record = int((self.samp_rate / self.chunk) * self.record_secs)
+        self.stream = None
+        self.initialize()
+
+    def initialize(self):
         stream = self.audio.open(format=self.form_1, rate=self.samp_rate, channels=self.chans,
                                  input_device_index=self.dev_index, input=True,
                                  frames_per_buffer=self.chunk)
         self.stream = stream
-        self.frames_to_record = int((self.samp_rate / self.chunk) * self.record_secs)
         mic_name = self.audio.get_device_info_by_index(self.dev_index).get('name')
         print('Using microphone %s' % mic_name)
         buffer = mic_name + '_' + str(dt.datetime.now()).split('.')[0].replace(':', '.')
-        self.name = name + '_' + buffer
+        self.name = self.name + '_' + buffer
         if self.to_record:
             os.makedirs('audio_records\\%s' % self.name)
 
@@ -48,7 +52,12 @@ class SoundRecorderAnalyzer(object):
         audio_power = []
         self.stream.start_stream()
         for ii in range(0, self.frames_to_record):
-            data = self.stream.read(self.chunk)
+            try:
+                data = self.stream.read(self.chunk)
+            except OSError as disconn:
+                self.initialize()
+                print('Lost connection, reinitializing')
+                data = self.stream.read(self.chunk)
             audio_power.append(audioop.rms(data, self.audio.get_sample_size(self.form_1)))
             if self.to_record:
                 frames.append(data)
@@ -84,12 +93,15 @@ class SoundRecorderAnalyzer(object):
     def record_hours(self, num_hours):
         print(num_hours)
         seconds_total = num_hours * 60 * 60
-        rolling_window = 5*60 // (self.record_secs + self.sleep_period) # x min window (x min / time record period)
+        rolling_window = 5 * 60 // (
+                    self.record_secs + self.sleep_period)  # x min window (x min / time record period to approximate the right time)
+        if self.Names.SLEEPING in self.name:
+            rolling_window *= 4
         num_periods = seconds_total / (self.sleep_period + self.record_secs)
         print(num_periods)
         df = self.collect_n_soundamps(n=int(num_periods))
         self.smooth_transform_write(df, 'average_amplitude', 2)
-        # self.construct_rolling_volume(df, 'average_amplitude', rolling_window)
+        self.construct_rolling_volume(df, 'average_amplitude', rolling_window)
         data = []
         frame_length = self.record_secs / self.frames_to_record
         for start_time, full_amplitude in df[['start_time', 'full_amplitude']].values.tolist():
@@ -97,7 +109,7 @@ class SoundRecorderAnalyzer(object):
                 data.append([start_time + i * frame_length, v])
         df_full = pd.DataFrame(data, columns=['start_time', 'actual amplitude'])
         self.smooth_transform_write(df_full, 'actual amplitude', 4 * self.record_secs)
-        # self.construct_rolling_volume(df_full, 'actual amplitude', rolling_window * self.frames_to_record)
+        self.construct_rolling_volume(df_full, 'actual amplitude', rolling_window * self.frames_to_record)
 
 
     def smooth_transform_write(self, df, col, multiplier=1, datetime_index=True):
@@ -117,7 +129,7 @@ class SoundRecorderAnalyzer(object):
 
     def construct_rolling_volume(self,df, col, window_base):
         df[col + '_rolling_' + str(window_base)] = df[col].rolling(window=window_base).sum() / window_base
-        df[col + '_rolling_' + str(window_base * 2)] = df[col].rolling(window=window_base * 2).sum() / (2*window_base )
+        df[col + '_rolling_' + str(window_base * 2)] = df[col].rolling(window=window_base * 2).sum() / (2*window_base)
         df[col + '_rolling_' + str(window_base * 4)] = df[col].rolling(window=window_base * 4).sum() / (4*window_base)
         df[[col + '_rolling_' + str(window_base), col + '_rolling_' + str(window_base * 2),
             col + '_rolling_' + str(window_base * 4)]].plot(figsize=(50, 30))

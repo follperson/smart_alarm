@@ -48,11 +48,12 @@ CREATE TABLE playlists (
 );
 
 CREATE TABLE playlist (
-  playlist_id INTEGER NOT NULL PRIMARY KEY,
-  audio_id integer,
-  audio_start integer,
-  audio_end integer,
-  playlist_order integer,
+  playlist_id INTEGER NOT NULL,
+  audio_id integer NOT NULL,
+  audio_start integer NOT NULL DEFAULT 0,
+  audio_end integer NOT NULL DEFAULT -1,
+  playlist_order integer NOT NULL,
   foreign key (playlist_id) references playlists(id),
-  foreign key (audio_id) references audio(id)
+  foreign key (audio_id) references audio(id),
+  PRIMARY KEY (playlist_id, playlist_order)
 );
