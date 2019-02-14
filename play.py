@@ -3,6 +3,8 @@ from pydub.utils import make_chunks
 from pyaudio import PyAudio
 from threading import Thread
 #from smart_alarm.db import get_db
+import time
+from math import ceil
 import pandas as pd
 SECOND = 1000
 
@@ -15,7 +17,24 @@ def get_playlist(name):
     return playlist
 
 # todo change the way that the sound rises over time - more at end less at beginning
+# todo make sound fade out when ending in middle of song
 
+def slow_roll(playlist, time_left):
+    total_secs = playlist['length'].sum()
+    vol = -60
+    vol_change_total = 60
+    for fp, duration in playlist[['filepath', 'length']].values:  # add start and end times to the playlist feature (soundprofile= plalist??)
+        print(fp)
+        if duration > time_left:
+            duration = time_left
+        if ceil(duration) <= 0:
+            break
+        local_max = vol + vol_change_total * duration / total_secs
+        song = Song(fp, min_vol=vol, max_vol=local_max, start_sec=0, end_sec=ceil(duration))
+        song.play()
+        time.sleep(duration)  # song plays on separate thread
+        time_left = total_secs - ceil(duration)
+        vol = local_max
 
 class Song(Thread):
     def __init__(self, f, min_vol=-60, max_vol=0, start_sec=0, end_sec=6000, *args, **kwargs):

@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+
+{% block header %}
+  <h1>{% block title %}Active Alarms Home{% endblock %}</h1>
+{% endblock %}
+
+{% block content %}
+<form>
+      <table width="100%">
+        <thead><tr>
+          {% for col in cols_to_display %}
+          <th>{{col}}</th>
+          {%endfor%}
+          <th width="20%"> Turn on / off</th>
+          <th width="30"> Snooze etc. </th>
+        </tr></thead>
+      {% for alarm in alarms %}
+        {% if alarm['active'] %}
+        <tr bgcolor="green">
+          {% for col in cols_to_display %}
+          <td>{{alarm[col]}}</td>
+          {% endfor%}
+          <td><button name="{{alarm['id']}}">Turn Off</button></td>
+          <td><a href="{{url_for('live.modify', alarm['id'])}}">Turn Off</a></td>
+        </tr>
+        {% else %}
+        <tr bgcolor="red">
+          {% for col in cols_to_display %}
+          <td>{{alarm[col]}}</td>
+          {% endfor%}
+          <td><button name="{{alarm['id']}}">Turn Onn</button></td>
+          <td><a href="{{url_for('live.modify', alarm['id'])}}">Turn Off</a></td>
+        </tr>
+        {% endif %}
+      {% endfor %}
+      </table>
+  </form>
+{% endblock %}

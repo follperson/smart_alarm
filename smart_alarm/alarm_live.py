@@ -1,28 +1,37 @@
 from flask import (
-Blueprint, flash, g, redirect, render_template, request, session, url_for
+    Blueprint, flash, render_template, request, url_for
 )
-import functools
 import pandas as pd
-import calendar
-import os
 
 from .db import get_db
 
 
-bp = Blueprint('alarm_live', __name__, url_prefix='/alarm')
-pass
-
-
+bp = Blueprint('live', __name__, url_prefix='/live')
 
 
 @bp.route('/')
-def index():
-    return render_template('alarms/index.html')
+def view():
+    db = get_db()
+    alarms = pd.read_sql('SELECT * FROM alarms', con=db)
+    return render_template('active/index.html', alarms=alarms.to_dict('records'), cols_to_display=['name','alarm_time'])
 
-@bp.route('/change',methods=['GET','POST'])
-def cancel():
+
+@bp.route('/<int:id>/modify',methods=['GET','POST'])
+def modify(id):
+    from alarm_functions import snooze_alarm, cancel_alarm
+
     if request.method == 'POST':
-        # cancel alarm
-        # flash(canceled)
-        pass
+        if 'snooze1' in request.form:
+            snooze_alarm(10)
+            message = 'Snoozed for 10 minutes, '
+        elif 'snooze2' in request.form:
+            snooze_alarm(10, True)
+            message = 'Snoozed for 10 and reset awake cycle'
+        elif 'cancel' in request.form:
+            cancel_alarm()
+            message = 'Cancelled alarm. Good morning'
+        else:
+            message = 'missing you'
+        flash(message)
     render_template('active/modify.html')
+

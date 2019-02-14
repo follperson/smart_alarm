@@ -3,7 +3,7 @@ Blueprint, flash, g, redirect, render_template, request, session, url_for
 )
 import pandas as pd
 import calendar
-from .utils import _get_profiles, get_profile_from_id, get_profile_from_name
+from .utils import _get_profiles, get_profile_from_id, get_profile_from_name, get_repeat_dates
 from .db import get_db
 
 
@@ -55,7 +55,7 @@ def create():
             db.commit()
 
             # print(url_for(create_alarm))
-            return render_template('alarms/success.html', params={'name':name, 'action':'create alarm', 'return':url_for('alarms.create_alarm')})
+            return render_template('alarms/success.html', params={'name':name, 'action':'create alarm', 'return':url_for('alarm.create')})
         flash('. '.join(error))
     return render_template('alarms/create_alarm.html', use=use, name=name, time=time, days=days,
                            sound_profile=sound_profile, color_profile=color_profile, active=active,
@@ -118,7 +118,7 @@ def update(id):
             db.commit()
         flash('. '.join(error))
         return render_template('alarms/success.html', params={'name': name, 'action': 'update alarm',
-                                                                   'return': url_for('alarms.update_alarm', id=id)})
+                                                                   'return': url_for('alarm.update', id=id)})
     flash('\n'.join(error))
     return render_template('alarms/create_alarm.html', use=use, name=name, time=time, days=days,
                            sound_profile=sound_profile, color_profile=color_profile, active=active,
@@ -131,10 +131,9 @@ def view():
     df = pd.read_sql('SELECT * FROM alarms',con=db)
     cols = ['name']
     if not df.empty:
-        df['repeat_dates'] = df.apply(lambda x: ', '.join([calendar.day_name[i] for i in range(7) if
-                                                           x['repeat_' + calendar.day_name[i].lower()]]), axis=1)
+        df['repeat_dates'] = df.apply(lambda x: get_repeat_dates(x), axis=1)
         df['active'] = df['active'].astype(bool)
-        df_sound = pd.read_sql('select * from sound_profiles', con=db).rename(
+        df_sound = pd.read_sql('select * from playlists', con=db).rename(
             columns={'id': 'sound_profile', 'name': 'sound_profile_name'})
         df_color = pd.read_sql('select * from color_profiles', con=db).rename(
             columns={'id': 'color_profile', 'name': 'color_profile_name'})

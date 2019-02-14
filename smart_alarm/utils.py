@@ -1,3 +1,5 @@
+from calendar import day_name
+
 def get_profile_from_id(db, val, table):
     return _get_profile('name','id', val, table, db)
 
@@ -18,3 +20,7 @@ def _get_profiles(fields_want, table, db):
     val = db.execute('SELECT %s FROM %s' % (', '.join(fields_want), table)).fetchall()
     assert val is not None, 'Empty table %s' % table
     return val
+
+
+def get_repeat_dates(x):
+    return ', '.join([day_name[i] for i in range(7) if x['repeat_' + day_name[i].lower()]])

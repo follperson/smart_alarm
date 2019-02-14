@@ -11,16 +11,16 @@
         <input name="name" id="name" required></li>
     <li><label for="time_span">select time span prior to wakeup time</label>
         <input type="number" name="time_span" id="time_span" required></li>
-      <li><label for="profile_id">select profile</label>
-          <select id="profile_id">
-          {% for o in profiles %}
-            {% if o.name == sound_profile %}
-                <option value="{{ o.name }}" selected>{{o.name}}</option>
-            {% else %}
-                <option value="{{ o.name }}">{{o.name}}</option>
-            {% endif %}
-        {% endfor %}
-              </select>
+      <!--<li><label for="profile_id">select profile</label>-->
+          <!--<select id="profile_id">-->
+          <!--{% for o in profiles %}-->
+            <!--{% if o.name == profile %}-->
+                <!--<option value="{{ o.name }}" selected>{{o.name}}</option>-->
+            <!--{% else %}-->
+                <!--<option value="{{ o.name }}">{{o.name}}</option>-->
+            <!--{% endif %}-->
+        <!--{% endfor %}-->
+              <!--</select>-->
   </ul>
       <input type="submit" value="Create">
   </form>

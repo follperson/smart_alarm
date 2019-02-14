@@ -1,10 +1,11 @@
 <title>{% block title %}{% endblock %} - alarm</title>
 <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 <nav>
-  <h1>just a little smart ALARM haha</h1>
+  <h1>Alarm Message</h1>
     <a href="{{ url_for('alarm.view') }}">Alarms</a>
     <a href="{{ url_for('sound.view') }}">Playlists</a>
     <a href="{{ url_for('color.view') }}">Color Profiles</a>
+    <a href="{{ url_for('live.view') }}"></a>
 </nav>
 <section class="content">
   <header>

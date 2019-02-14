@@ -1,0 +1,33 @@
+{% extends 'base.html' %}
+
+{% block header %}
+  <h1>{% block title %}Home{% endblock %}</h1>
+{% endblock %}
+
+{% block content %}
+<table>
+    <thead>
+    <tr>
+    {% for col in df.columns %}
+        <th>{{col}}</th>
+        {% endfor %}
+        <th> Edit </th>
+    </tr>
+    </thead>
+    {% for row in df.to_dict('records') %}
+    <tr>
+        {% for col in df.columns %}
+        <td>
+            {{ row[col] }}
+        </td>
+        {% endfor %}
+        <td>
+            <!--<a href="{{ url_for('color.update', id=row['id']) }}">View</a>-->
+            todoV
+        </td>
+
+    </tr>
+    {% endfor %}
+</table>
+<span><a href={{url_for('color.create')}}> Create New Color Profile? </a></span>
+{% endblock %}

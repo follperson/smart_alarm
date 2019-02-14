@@ -23,10 +23,9 @@ def create_app(test_config=None):
     except OSError:
         pass
 
-    # a simple page that says hello
     @app.route('/')
     def index():
-        return render_template('alarms/index.html')
+        return render_template('active/index.html')
 
     from . import db
     db.init_app(app)
@@ -39,5 +38,8 @@ def create_app(test_config=None):
 
     from . import color_profiles
     app.register_blueprint(color_profiles.bp)
+
+    from . import alarm_live
+    app.register_blueprint(alarm_live.bp)
 
     return app
