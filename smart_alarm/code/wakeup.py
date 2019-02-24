@@ -1,7 +1,7 @@
-from voice import WakeupSpeaker
-from quotes import get_weather_nws, get_weather_owm, get_quote
-from record_audio import SoundRecorderAnalyzer
-from play import Song, get_playlist
+from smart_alarm.code.voice import WakeupSpeaker
+from smart_alarm.code.quotes import get_weather_nws, get_weather_owm, get_quote
+from smart_alarm.code.record_audio import SoundRecorderAnalyzer
+from smart_alarm.code.play import Song, get_playlist
 from threading import Thread
 from math import ceil
 import datetime as dt

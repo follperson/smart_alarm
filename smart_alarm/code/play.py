@@ -1,3 +1,4 @@
+from os.path import basename, dirname
 from pydub import AudioSegment
 from pydub.utils import make_chunks
 from pyaudio import PyAudio
@@ -17,7 +18,8 @@ def get_playlist(name):
     return playlist
 
 # todo change the way that the sound rises over time - more at end less at beginning
-# todo make sound fade out when ending in middle of song
+# todo make sound fade out into the word time
+
 
 def slow_roll(playlist, time_left):
     total_secs = playlist['length'].sum()
@@ -36,6 +38,7 @@ def slow_roll(playlist, time_left):
         time_left = total_secs - ceil(duration)
         vol = local_max
 
+
 class Song(Thread):
     def __init__(self, f, min_vol=-60, max_vol=0, start_sec=0, end_sec=6000, *args, **kwargs):
         self.seg = AudioSegment.from_file(f)
@@ -46,7 +49,7 @@ class Song(Thread):
         self.max_vol = max_vol
         self.start_sec = start_sec
         self.end_sec = end_sec
-        Thread.__init__(self, *args, **kwargs)
+        Thread.__init__(self, name=basename(f), *args, **kwargs)
         self.start()
 
     def pause(self):
@@ -69,7 +72,7 @@ class Song(Thread):
         chunk_count = 0
         chunks = make_chunks(self.seg, 100)
         increment = abs(self.max_vol - self.cur_vol) / len(chunks)
-        print('cur vol:', self.cur_vol)
+        print('cur vol:', self.cur_vol, 'chunks ', len(chunks))
         while chunk_count <= len(chunks) - 1:
             if not self.__is_paused:
                 cur_chunk = chunks[chunk_count] + self.cur_vol
