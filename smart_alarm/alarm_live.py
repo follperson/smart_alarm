@@ -1,5 +1,5 @@
 from flask import (
-    Blueprint, flash, render_template, request, url_for
+    Blueprint, flash, render_template, request
 )
 import pandas as pd
 
@@ -18,7 +18,7 @@ def view():
 
 @bp.route('/<int:id>/modify',methods=['GET','POST'])
 def modify(id):
-    from alarm_functions import snooze_alarm, cancel_alarm
+    from smart_alarm.code.alarm_functions import snooze_alarm, cancel_alarm
 
     if request.method == 'POST':
         if 'snooze1' in request.form:

@@ -5,33 +5,35 @@
 {% endblock %}
 
 {% block content %}
-<form>
+<form method="POST">
       <table width="100%">
         <thead><tr>
-          {% for col in cols_to_display %}
-          <th>{{col}}</th>
-          {%endfor%}
+          <th>Alarm Title</th>
+          <th>Alarm Time</th>
+          <th>Playlist</th>
+          <th>Wake Window</th>
+          <th>Snooze Time</th>
+          <th>Next Alarm Time</th>
+          <th>Time Til Next Alarm</th>
           <th width="20%"> Turn on / off</th>
-          <th width="30"> Snooze etc. </th>
+          <th width="30%"> Snooze etc. </th>
         </tr></thead>
       {% for alarm in alarms %}
-        {% if alarm['active'] %}
+        {% if alarm.on %}
         <tr bgcolor="green">
-          {% for col in cols_to_display %}
-          <td>{{alarm[col]}}</td>
-          {% endfor%}
-          <td><button name="{{alarm['id']}}">Turn Off</button></td>
-          <td><a href="{{url_for('live.modify', alarm['id'])}}">Turn Off</a></td>
-        </tr>
-        {% else %}
+          {% else %}
         <tr bgcolor="red">
-          {% for col in cols_to_display %}
-          <td>{{alarm[col]}}</td>
-          {% endfor%}
-          <td><button name="{{alarm['id']}}">Turn Onn</button></td>
-          <td><a href="{{url_for('live.modify', alarm['id'])}}">Turn Off</a></td>
-        </tr>
         {% endif %}
+          <td>{{alarm.name}}</td>
+          <th>{{alarm.alarm_time}}</th>
+          <th>{{alarm.sound_profile.name}}</th>
+          <th>{{alarm.wake_window}}</th>
+          <th>{{alarm.snooze_time}}</th>
+          <th>{{alarm.next_alarm_datetime}}</th>
+          <th>{{alarm.time_til_wake|string()}}</th>
+          <td><input type="submit" name="{{alarm.id}}" value="Snooze"></td>
+          <td><input type="submit" name="{{alarm.id}}" value="TurnOff"></td>
+        </tr>
       {% endfor %}
       </table>
   </form>

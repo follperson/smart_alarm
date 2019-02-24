@@ -1,5 +1,5 @@
 import os
-from flask import Flask, render_template
+from flask import Flask, render_template, g
 
 
 def create_app(test_config=None):
@@ -22,11 +22,6 @@ def create_app(test_config=None):
         os.makedirs(app.instance_path)
     except OSError:
         pass
-
-    @app.route('/')
-    def index():
-        return render_template('active/index.html')
-
     from . import db
     db.init_app(app)
 
@@ -42,4 +37,11 @@ def create_app(test_config=None):
     from . import alarm_live
     app.register_blueprint(alarm_live.bp)
 
+    from . import wakeup
+    app.register_blueprint(wakeup.bp)
+
     return app
+
+
+if __name__ == '__main__':
+    create_app()

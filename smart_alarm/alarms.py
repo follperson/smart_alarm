@@ -139,5 +139,8 @@ def view():
             columns={'id': 'color_profile', 'name': 'color_profile_name'})
         df = pd.merge(df, df_sound[['sound_profile','sound_profile_name']], on='sound_profile', how='left')
         df = pd.merge(df, df_color[['color_profile','color_profile_name']], on='color_profile', how='left')
+        # print(df['alarm_time'])
+        # print(df['alarm_time'].iloc[0])
+        # print(type(df['alarm_time'].iloc[0]))
         cols = ['id','name', 'alarm_time', 'repeat_dates', 'active', 'sound_profile_name', 'color_profile_name', 'created']
     return render_template('alarms/view_alarms.html', df=df[cols])

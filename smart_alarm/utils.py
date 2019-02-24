@@ -22,5 +22,8 @@ def _get_profiles(fields_want, table, db):
     return val
 
 
-def get_repeat_dates(x):
-    return ', '.join([day_name[i] for i in range(7) if x['repeat_' + day_name[i].lower()]])
+def get_repeat_dates(x,string=True):
+    if string:
+        return ', '.join([day_name[i] for i in range(7) if x['repeat_' + day_name[i].lower()]])
+    else:
+        return [i for i in range(7) if x['repeat_' + day_name[i].lower()]]
