@@ -4,6 +4,7 @@ from threading import Thread
 import time
 import datetime as dt
 from math import ceil
+from .code.wakeup import read_aloud as read_weather_quote
 from .code.play import Song
 from .utils import get_repeat_dates
 from flask import g, app, current_app, Blueprint, render_template, request
@@ -20,16 +21,15 @@ def close_watchers(e=None):
 def init_app(app):
     app.teardown_appcontext(close_watchers())
 
-
 def get_watcher():
     try:
-        g.watcher
+        current_app.watcher
     except AttributeError as ok:
         watcher = AlarmWatcher()
-        print('Begin Run Watcher')
-        watcher.check()
-        g.watcher = watcher
-    return g.watcher
+        print('Begin Run Watcher for the first time')
+        current_app.watcher = watcher
+    current_app.watcher.check()
+    return current_app.watcher
 
 
 def get_days_from_now(today, next_day):
@@ -51,7 +51,7 @@ def view():
                 break
         assert aid in request.form
         if request.form[aid] == 'Snooze':
-            alarm.snoozed = True
+            alarm.snooze()
         elif request.form[aid] == 'TurnOff':
             if alarm.on:
                 alarm.turnoff()
@@ -61,7 +61,7 @@ def view():
 
 
 class Alarm(Thread):
-    def __init__(self, id, beg_vol=-10, end_vol=0,*args, **kwargs):
+    def __init__(self, id, beg_vol=-60, end_vol=0,*args, **kwargs):
         self.id = id
         self.alarm_time = None
         self.sound_profile = None
@@ -74,12 +74,13 @@ class Alarm(Thread):
         self.snooze_time = 10 # give this to the alarm table
         self.next_alarm_datetime = None
         self.time_til_wake = None
+        self.initialized_time = dt.datetime.now()
+        self.running = False
         self.vol = beg_vol
         self.vol_change_total = abs(end_vol - beg_vol)
         Thread.__init__(self, *args, **kwargs)
         self.get_alarm()
         self.start()
-
 
     def play_song(self, index, time_left):
         fp, start, end, max_duration = self.sound_profile.df.loc[
@@ -92,7 +93,7 @@ class Alarm(Thread):
         if ceil(duration) <= 0: # also shouldnt happen
             return
         print(fp)
-        print(start, ceil(duration))
+        # print(start, ceil(duration))
         vol_increase = self.vol_change_total * duration / self.wake_window
         local_max = self.vol + vol_increase
         self.current_song = Song(fp, min_vol=self.vol, max_vol=local_max, start_sec=start, end_sec=ceil(duration))
@@ -109,17 +110,20 @@ class Alarm(Thread):
                 time.sleep(self.snooze_time * 60)
                 self.current_song.play()
                 # todo add more snooze options
+            if not self.running:
+                self.current_song.stop()
+                break
             i += 1
             time_left = self.wake_window - snooze_check_window
             self.vol += vol_increase / check_periods
         self.current_song.pause()
+        self.current_song.join(0)
         if self.vol != local_max:
             print('Current Volume is %s, supposed to be %s' % (self.vol, local_max))
         return time_left
 
     def check(self):
         if self.next_alarm_datetime - dt.timedelta(seconds=self.wake_window) <= dt.datetime.now():
-            # print('AlarmCheck True',self.next_alarm_datetime, 'minus', dt.timedelta(seconds=self.wake_window),'is more than', dt.datetime.now())
             return True
         return False
 
@@ -128,11 +132,15 @@ class Alarm(Thread):
         if not self.check():
             return
         print('Beginning Alarm Sequence for %s' % self.name)
-        time_left = self.wake_window
+        self.running = True
+        time_left = min(self.wake_window, self.get_time_til_wake().seconds)
+        if time_left != self.wake_window: print('under wake window amount of time')
         for i in self.sound_profile.df.index:
             time_left = self.play_song(i, time_left)
+        read_weather_quote()
+        self.running = False
 
-    def get_alarm(self):
+    def _get_alarm_db(self):
         alarm_info = g.db.execute('SELECT * FROM alarms WHERE id=?', (self.id,)).fetchone()
         self.alarm_time = alarm_info['alarm_time'] # string
         self.name = alarm_info['name']
@@ -140,17 +148,28 @@ class Alarm(Thread):
         playlist_id = alarm_info['sound_profile']
         self.sound_profile = Playlist(playlist_id=playlist_id)
         self.wake_window = self.sound_profile.wake_window
-        self.color_profile = alarm_info['color_profile']  # todo
+        self.color_profile = alarm_info['color_profile'] # todo
+        self.on = alarm_info['active']
+
+    def _get_alarm_countdown(self):
         self.get_next_alarm_time()
         self.get_time_til_wake()
-        self.on = alarm_info['active']
+
+    def get_alarm(self):
+        self._get_alarm_db()
+        self._get_alarm_countdown()
+
 
     # todo put generic snooze in
 
     def turnoff(self):
         self.on = False
+        self.running = False
         g.db.execute('UPDATE alarms SET active = 0 WHERE id=?', (self.id,))
         g.db.commit()
+
+    def snooze(self):
+        self.snoozed = True
 
     def turnon(self):
         self.on = True
@@ -222,20 +241,30 @@ class Playlist(object):
         return self.wake_window
 
 
-class AlarmWatcher():
+class AlarmWatcher(Thread):
     def __init__(self):
         self.alarms = []
         self.closed = False
-        # Thread.__init__(self)
-        # self.start()
+        get_db()
+        Thread.__init__(self)
+        self.start()
 
     def check(self):
-        df_alarms = pd.read_sql('SELECT id, name FROM alarms', con=g.db)
+        df_alarms = pd.read_sql('SELECT id, name, modified FROM alarms', con=g.db).set_index('id')
+        for i in range(len(self.alarms)):
+            alarm = self.alarms[i]
+            if alarm.initialized_time < df_alarms.loc[alarm.id, 'modified']:
+                alarm.turnoff()
+                print(alarm.initialized_time, 'is less than', df_alarms.loc[alarm.id, 'modified'])
+                alarm = Alarm(alarm.id)
+            else:
+                alarm._get_alarm_countdown()
+            alarm.check()
+            self.alarms[i] = alarm
         df_alarms = df_alarms[~df_alarms['name'].isin([alarm.name for alarm in self.alarms])]
         if not df_alarms.empty:
-            for alarm_id in df_alarms.id:
+            for alarm_id in df_alarms.index:
                 alarm = Alarm(alarm_id)
-                # alarm.run()
                 self.alarms.append(alarm)
 
     def run(self):

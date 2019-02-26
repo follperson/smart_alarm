@@ -2,7 +2,7 @@ from os.path import basename, dirname
 from pydub import AudioSegment
 from pydub.utils import make_chunks
 from pyaudio import PyAudio
-from threading import Thread
+from threading import Thread, Event
 #from smart_alarm.db import get_db
 import time
 from math import ceil
@@ -50,13 +50,22 @@ class Song(Thread):
         self.start_sec = start_sec
         self.end_sec = end_sec
         Thread.__init__(self, name=basename(f), *args, **kwargs)
+        self._stop_event = Event()
         self.start()
 
     def pause(self):
         self.__is_paused = True
 
+    def stop(self):
+        self._stop_event.set()
+
+    def stopped(self):
+        return self._stop_event.is_set()
+
     def quit(self):
+        self.__is_paused = True
         self.p.terminate()
+        self.stop()
 
     def play(self):
         self.__is_paused = False
@@ -82,6 +91,8 @@ class Song(Thread):
             else:
                 free = stream.get_write_available()
                 data = chr(0) * free
+            if self.stopped():
+                return
             stream.write(data)
 
         stream.stop_stream()

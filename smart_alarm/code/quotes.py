@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 from requests import get
 from bs4 import BeautifulSoup
-from smart_alarm.code.config import api_key_weather
+from .config import api_key_weather
 
 
 def get_forecast_entry(table):

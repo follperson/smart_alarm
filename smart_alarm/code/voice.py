@@ -5,7 +5,7 @@ from numpy.random import randint
 import os
 import pyaudio
 from google.cloud import texttospeech
-from smart_alarm.code.config import api_key_google_path
+from .config import api_key_google_path
 
 os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = api_key_google_path
 

@@ -3,6 +3,7 @@ Blueprint, flash, g, redirect, render_template, request, session, url_for
 )
 import pandas as pd
 import calendar
+import datetime as dt
 from .utils import _get_profiles, get_profile_from_id, get_profile_from_name, get_repeat_dates
 from .db import get_db
 
@@ -46,10 +47,10 @@ def create():
         if not error:
             print('Commit Create')
             db.execute(
-                'INSERT INTO alarms (name, alarm_time, active, sound_profile, color_profile, repeat_monday, '
+                'INSERT INTO alarms (name, modified, alarm_time, active, sound_profile, color_profile, repeat_monday, '
                 'repeat_tuesday, repeat_wednesday, repeat_thursday, repeat_friday, repeat_saturday, repeat_sunday) '
-                'VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
-                (name, time, active, sound_profile_id['id'], color_profile_id['id'], 0 in days, 1 in days, 2 in days, 3 in days,
+                'VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+                (name, dt.datetime.now(), time, active, sound_profile_id['id'], color_profile_id['id'], 0 in days, 1 in days, 2 in days, 3 in days,
                  4 in days, 5 in days, 6 in days,)
             )
             db.commit()
@@ -60,7 +61,6 @@ def create():
     return render_template('alarms/create_alarm.html', use=use, name=name, time=time, days=days,
                            sound_profile=sound_profile, color_profile=color_profile, active=active,
                            sound_profiles=sound_profiles, color_profiles=color_profiles)
-
 
 
 #TODO: view = create/read/update/delete home
@@ -112,9 +112,9 @@ def update(id):
         if not error:
             print('Commit update')
             db.execute(
-                'UPDATE alarms SET name = ?, alarm_time = ?, active = ?, sound_profile = ?, color_profile = ?, repeat_monday = ?, repeat_tuesday = ?, repeat_wednesday = ?, repeat_thursday = ?, repeat_friday = ?, repeat_saturday = ?, repeat_sunday = ? WHERE id = ?',
-                (name, time, active, sound_profile_id['id'], color_profile_id['id'], 1 in days, 2 in days, 3 in days, 4 in days,
-                 5 in days, 6 in days, 7 in days, id,))
+                'UPDATE alarms SET name = ?, alarm_time = ?, active = ?, sound_profile = ?, color_profile = ?, repeat_monday = ?, repeat_tuesday = ?, repeat_wednesday = ?, repeat_thursday = ?, repeat_friday = ?, repeat_saturday = ?, repeat_sunday = ?, modified = ? WHERE id = ?',
+                (name, time, active, sound_profile_id['id'], color_profile_id['id'], 0 in days, 1 in days, 2 in days, 3 in days, 4 in days,
+                 5 in days, 6 in days, dt.datetime.now(), id,))
             db.commit()
         flash('. '.join(error))
         return render_template('alarms/success.html', params={'name': name, 'action': 'update alarm',
@@ -139,8 +139,5 @@ def view():
             columns={'id': 'color_profile', 'name': 'color_profile_name'})
         df = pd.merge(df, df_sound[['sound_profile','sound_profile_name']], on='sound_profile', how='left')
         df = pd.merge(df, df_color[['color_profile','color_profile_name']], on='color_profile', how='left')
-        # print(df['alarm_time'])
-        # print(df['alarm_time'].iloc[0])
-        # print(type(df['alarm_time'].iloc[0]))
         cols = ['id','name', 'alarm_time', 'repeat_dates', 'active', 'sound_profile_name', 'color_profile_name', 'created']
     return render_template('alarms/view_alarms.html', df=df[cols])
