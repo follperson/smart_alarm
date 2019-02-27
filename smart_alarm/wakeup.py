@@ -110,6 +110,7 @@ class Alarm(Thread):
                 time.sleep(self.snooze_time * 60)
                 self.current_song.play()
                 print("le snooze is overrrr")
+                self.snoozed = False
                 # todo add more snooze options
             if not self.running:
                 self.current_song.stop()
