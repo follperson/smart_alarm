@@ -53,6 +53,7 @@ def view():
         if request.form[aid] == 'Snooze':
             alarm.snooze()
         elif request.form[aid] == 'TurnOff':
+            print('Turnoff %s %s' %(aid, alarm.on))
             if alarm.on:
                 alarm.turnoff()
             else:
@@ -88,13 +89,12 @@ class Alarm(Thread):
         duration = max(end, max_duration)
         if start == -1:
             start = 0
-        if duration > time_left: # shouldnt happen
+        if duration > time_left:  # shouldnt happen
             duration = time_left
-        if ceil(duration) <= 0: # also shouldnt happen
+        if ceil(duration) <= 0:  # also shouldnt happen
             return
-        print(fp)
-        # print(start, ceil(duration))
-        vol_increase = self.vol_change_total * duration / self.wake_window
+        print(time_left, duration)
+        vol_increase = self.vol_change_total * duration / time_left
         local_max = self.vol + vol_increase
         self.current_song = Song(fp, min_vol=self.vol, max_vol=local_max, start_sec=start, end_sec=ceil(duration))
         self.current_song.play()
@@ -109,26 +109,29 @@ class Alarm(Thread):
                 self.current_song.pause()
                 time.sleep(self.snooze_time * 60)
                 self.current_song.play()
+                print("le snooze is overrrr")
                 # todo add more snooze options
             if not self.running:
                 self.current_song.stop()
                 break
             i += 1
-            time_left = self.wake_window - snooze_check_window
+            time_left = time_left - snooze_check_window
             self.vol += vol_increase / check_periods
+        # time_left = time_left - duration
         self.current_song.pause()
         self.current_song.join(0)
         if self.vol != local_max:
             print('Current Volume is %s, supposed to be %s' % (self.vol, local_max))
+        print('tmeleft',time_left)
         return time_left
 
     def check(self):
-        if self.next_alarm_datetime - dt.timedelta(seconds=self.wake_window) <= dt.datetime.now():
-            return True
+        if self.on:
+            if self.next_alarm_datetime - dt.timedelta(seconds=self.wake_window) <= dt.datetime.now():
+                return True
         return False
 
     def run(self):
-        # print("Checking %s" % self.name)
         if not self.check():
             return
         print('Beginning Alarm Sequence for %s' % self.name)
@@ -137,6 +140,8 @@ class Alarm(Thread):
         if time_left != self.wake_window: print('under wake window amount of time')
         for i in self.sound_profile.df.index:
             time_left = self.play_song(i, time_left)
+            if not self.running:
+                return
         read_weather_quote()
         self.running = False
 
@@ -159,22 +164,25 @@ class Alarm(Thread):
         self._get_alarm_db()
         self._get_alarm_countdown()
 
-
     # todo put generic snooze in
 
-    def turnoff(self):
+    def turnoff(self, change_db=True):
         self.on = False
         self.running = False
-        g.db.execute('UPDATE alarms SET active = 0 WHERE id=?', (self.id,))
-        g.db.commit()
+        if change_db:
+            self.db_turn_on_off(0)
 
     def snooze(self):
         self.snoozed = True
 
-    def turnon(self):
-        self.on = True
-        g.db.execute('UPDATE alarms SET active = 1 WHERE id=?', (self.id,))
+    def db_turn_on_off(self, on):
+        g.db.execute('UPDATE alarms SET active = ?, modified = ? WHERE id=?', (int(on), dt.datetime.now(), self.id,))
         g.db.commit()
+
+    def turnon(self, change_db=True):
+        self.on = True
+        if change_db:
+            self.db_turn_on_off(1)
 
     def get_next_alarm_time(self):
         now = dt.datetime.now()
@@ -215,7 +223,8 @@ class Playlist(object):
         else:
             raise NotImplementedError('You must pass either a playlist id or a name')
         self.df = self.get_playlist()
-        self.wake_window = self.get_wake_window()
+        self.wake_window = 0
+        self.get_wake_window()
 
     def get_name(self):
         return g.db.execute('SELECT name FROM playlists WHERE id=?', (self.playlist_id,)).fetchone()['name']
@@ -237,7 +246,7 @@ class Playlist(object):
             if (end > max_length) or (end <= 0):
                 end = max_length
             wake_window += end - start
-        self.wake_window = wake_window
+        self.wake_window = int(wake_window)
         return self.wake_window
 
 
@@ -254,7 +263,7 @@ class AlarmWatcher(Thread):
         for i in range(len(self.alarms)):
             alarm = self.alarms[i]
             if alarm.initialized_time < df_alarms.loc[alarm.id, 'modified']:
-                alarm.turnoff()
+                alarm.turnoff(False)
                 print(alarm.initialized_time, 'is less than', df_alarms.loc[alarm.id, 'modified'])
                 alarm = Alarm(alarm.id)
             else:

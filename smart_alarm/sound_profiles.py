@@ -71,14 +71,15 @@ def update(id):
             mod_songs = [tag.split('_')[-1] for tag in request.form if 'update' in tag]
             print(mod_songs)
             fields = ['audio_start','audio_end','playlist_order']
-            updates = {song_id: {field: request.form[song_id + '_' + field] for field in fields} for song_id in mod_songs }
+            updates = {song_id: {field: request.form[song_id + '_' + field] for field in fields} for song_id in mod_songs}
+            print(updates)
             updates = verify_updates(updates)
-            # print(updates)
+
             db.execute('DELETE FROM playlist WHERE playlist_id = ?', (id,))
             for song in updates:
                 update_input = tuple([updates[song][field] for field in fields] + [song, id])
+                # print(update_input)
                 text = 'INSERT INTO playlist (%s) VALUES (%s ?, ?)' % (', '.join(fields + ['audio_id','playlist_id']), '?, ' * (len(fields)))
-                print(text)
                 db.execute(text, update_input)
             db.commit()
             flash('Success!')
@@ -89,14 +90,14 @@ def update(id):
 
 # todo fix audio_end (shows up null)
 def verify_updates(updates): # generalize / abstract
-    for song in updates: # audio end is buster
+    for song in updates:
         fields = ['audio_start', 'audio_end', 'playlist_order']
         for field in fields:
             try:
                 updates[song][field] = int(updates[song][field])
             except ValueError as null:
                 updates[song][field] = -1
-        if updates[song]['audio_end'] >= updates[song]['audio_start']:
+        if updates[song]['audio_end'] <= updates[song]['audio_start']:
             updates[song]['audio_end'] = -1
     order = [(song, updates[song]['playlist_order']) for song in updates]
     order.sort(key=lambda x: x[1])
