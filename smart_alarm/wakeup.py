@@ -50,7 +50,6 @@ def get_days_from_now(today, next_day):
 
 @bp.route('/', methods=('GET', 'POST'))
 def view():
-    print('Get Watcher From View')
     watcher = get_watcher()
     if request.method == 'POST':
         print(request.form)
@@ -149,14 +148,13 @@ class Alarm(Thread):
         return time_left
 
     def check(self):
+        self._get_alarm_countdown()
         if self.on:
             if self.next_alarm_datetime - dt.timedelta(seconds=self.wake_window) <= dt.datetime.now():
                 return True
         return False
 
-    def run(self):
-        if not self.check():
-            return
+    def start_alarm(self):
         print('Beginning Alarm Sequence for %s' % self.name)
         self.running = True
         time_left = min(self.wake_window, self.get_time_til_wake().seconds)
@@ -167,6 +165,12 @@ class Alarm(Thread):
                 return
         read_weather_quote()
         self.running = False
+
+    def run(self):
+        while self.on:
+            if self.check():
+                self.start_alarm()
+            time.sleep(20)
 
     def _get_alarm_db(self):
         db = get_db_generic(self.db_params)
@@ -217,11 +221,8 @@ class Alarm(Thread):
         alarm_min = int(self.alarm_time.split(':')[-1])
         # print(self.name, today, self.repeat_days)
         # print(self.name, '(',now.hour, '==', alarm_hour,' and ', now.minute, '<', alarm_min, ') or' , now.hour, '<', alarm_hour)
-        if today in self.repeat_days:
-            if (now.hour == alarm_hour and now.minute < alarm_min) or (now.hour < alarm_hour):
-                days_from_now = 0
-            else:
-                days_from_now = 7
+        if today in self.repeat_days and (now.hour == alarm_hour and now.minute < alarm_min) or (now.hour < alarm_hour):
+            days_from_now = 0
         elif not any([today <= day for day in self.repeat_days]):
             next_day = self.repeat_days[0]
             days_from_now = get_days_from_now(today, next_day)
@@ -302,17 +303,14 @@ class AlarmWatcher(Thread):
     def check(self):
         db = self.get_db()
         df_alarms = pd.read_sql('SELECT id, name, modified FROM alarms', con=db).set_index('id')
-        print(len(self.alarms),'active alarms already')
+        # print(len(self.alarms),'active alarms already')
         for i in range(len(self.alarms)):
             alarm = self.alarms[i]
             if alarm.initialized_time < df_alarms.loc[alarm.id, 'modified']:
                 alarm.turnoff(False)
                 # print(alarm.initialized_time, 'is less than', df_alarms.loc[alarm.id, 'modified'])
                 alarm = Alarm(alarm.id, self.db_params)
-            else:
-                alarm._get_alarm_countdown()
-            alarm.check()
-            self.alarms[i] = alarm
+                self.alarms[i] = alarm
         df_alarms = df_alarms[~df_alarms['name'].isin([alarm.name for alarm in self.alarms])]
         if not df_alarms.empty:
             for alarm_id in df_alarms.index:
@@ -322,9 +320,7 @@ class AlarmWatcher(Thread):
     def run(self):
         while not self.closed:
             time.sleep(20)
-            print("Inside Washer, checking")
             self.check()
-
 
     def close(self):
         self.closed = True

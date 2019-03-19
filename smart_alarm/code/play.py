@@ -92,7 +92,7 @@ class Song(Thread):
                 free = stream.get_write_available()
                 data = chr(0) * free
             if self.stopped():
-                return
+                break
             stream.write(data)
 
         stream.stop_stream()
