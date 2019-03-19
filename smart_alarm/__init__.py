@@ -34,9 +34,6 @@ def create_app(test_config=None):
     from . import color_profiles
     app.register_blueprint(color_profiles.bp)
 
-    from . import alarm_live
-    app.register_blueprint(alarm_live.bp)
-
     from . import wakeup
     app.register_blueprint(wakeup.bp)
 

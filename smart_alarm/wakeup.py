@@ -11,6 +11,7 @@ from flask import g, app, current_app, Blueprint, render_template, request, flas
 
 bp = Blueprint('wakeup', __name__, url_prefix='/')
 
+# still i have to go to this wakeup page to initialize the watcher. not a big deal but i could proly do it another way
 
 def close_watchers(e=None):
     watcher = g.pop('watcher', None)
@@ -68,7 +69,8 @@ def view():
                     break
             assert aid in request.form
             if request.form[aid] == 'Snooze':
-                alarm.snooze()
+                if alarm.running:
+                    alarm.snooze()
             elif request.form[aid] == 'TurnOff':
                 print('Turnoff %s %s' % (aid, alarm.on))
                 if alarm.on:
@@ -78,9 +80,8 @@ def view():
     return render_template('active/index.html', alarms=watcher.alarms)
 
 
-
 class Alarm(Thread):
-    def __init__(self, id, db_params, beg_vol=-60, end_vol=-30, *args, **kwargs):
+    def __init__(self, id, db_params, beg_vol=-30, end_vol=0, *args, **kwargs):
         self.id = id
         self.alarm_time = None
         self.sound_profile = None
@@ -91,6 +92,7 @@ class Alarm(Thread):
         self.snoozed = False
         self.current_song = None
         self.snooze_time = 10 # give this to the alarm table
+        self.snooze_time_left = 0
         self.next_alarm_datetime = None
         self.time_til_wake = None
         self.initialized_time = dt.datetime.now()
@@ -126,7 +128,9 @@ class Alarm(Thread):
             if self.snoozed:
                 print("le snooze")
                 self.current_song.pause()
-                time.sleep(self.snooze_time * 60)
+                for i in range(self.snooze_time * 60):
+                    time.sleep(.99)
+                    self.snooze_time_left = self.snooze_time * 60 - i
                 self.current_song.play()
                 print("le snooze is over")
                 self.snoozed = False
@@ -142,7 +146,6 @@ class Alarm(Thread):
         self.current_song.join(0)
         if self.vol != local_max:
             print('Current Volume is %s, supposed to be %s' % (self.vol, local_max))
-        print('tmeleft',time_left)
         return time_left
 
     def check(self):
@@ -195,6 +198,7 @@ class Alarm(Thread):
 
     def snooze(self):
         self.snoozed = True
+        self.snooze_time_left = self.snooze_time * 60
 
     def db_turn_on_off(self, on):
         db = get_db_generic(self.db_params)
@@ -320,6 +324,8 @@ class AlarmWatcher(Thread):
             time.sleep(20)
             print("Inside Washer, checking")
             self.check()
+
+
     def close(self):
         self.closed = True
 
