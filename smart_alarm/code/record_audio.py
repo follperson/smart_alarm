@@ -6,17 +6,18 @@ import time
 import matplotlib.pyplot as plt
 import datetime as dt
 from scipy.ndimage.filters import gaussian_filter1d
+import threading
 import os
 import numpy as np
 
 
-class SoundRecorderAnalyzer(object):
+class SoundRecorderAnalyzer(threading.Thread):
     class Names:
         HOME = 'Home'
         SLEEPING = 'Sleeping'
         WORK = 'Work'
 
-    def __init__(self, name='', record_secs=5, sleep_period=10, to_record=False):
+    def __init__(self, name='', record_secs=5, sleep_period=10, to_record=False, record_hours=8, *args, **kwargs):
         self.record_secs = record_secs
         self.sleep_period = sleep_period
         self.to_record = to_record
@@ -28,8 +29,13 @@ class SoundRecorderAnalyzer(object):
         self.dev_index = 1  # device index found by p.get_device_info_by_index(ii)
         self.audio = pyaudio.PyAudio()  # create pyaudio instantiation
         self.frames_to_record = int((self.samp_rate / self.chunk) * self.record_secs)
+        self.hours_to_record = record_hours
         self.stream = None
-        self.initialize()
+        self.image_paths = dict()
+        self.__quit = False
+        threading.Thread.__init__(*args, **kwargs)
+        self.start()
+
 
     def initialize(self):
         stream = self.audio.open(format=self.form_1, rate=self.samp_rate, channels=self.chans,
@@ -61,6 +67,8 @@ class SoundRecorderAnalyzer(object):
             audio_power.append(audioop.rms(data, self.audio.get_sample_size(self.form_1)))
             if self.to_record:
                 frames.append(data)
+            if self.__quit:
+                break
         self.stream.stop_stream()
 
         if self.to_record:
@@ -72,6 +80,9 @@ class SoundRecorderAnalyzer(object):
             wavefile.close()
         return audio_power
 
+    def quit(self):
+        self.__quit = True
+
     def collect_n_soundamps(self,n=10):
         data = []
         for i in range(n):
@@ -81,6 +92,8 @@ class SoundRecorderAnalyzer(object):
             avg_amp = sum(amplitude) / len(amplitude)
             print(avg_amp)
             data.append([i,start, avg_amp, amplitude])
+            if self.__quit:
+                break
             time.sleep(self.sleep_period)
         self.stream.close()
         self.audio.terminate()
@@ -90,9 +103,9 @@ class SoundRecorderAnalyzer(object):
         df.to_csv('data_collection\\%s\\data_collection_raw.csv' % self.name)
         return df
 
-    def record_hours(self, num_hours):
-        print(num_hours)
-        seconds_total = num_hours * 60 * 60
+    def record_hours(self):
+        print(self.hours_to_record)
+        seconds_total = self.hours_to_record * 60 * 60
         rolling_window = 5 * 60 // (
                     self.record_secs + self.sleep_period)  # x min window (x min / time record period to approximate the right time)
         if self.Names.SLEEPING in self.name:
@@ -111,6 +124,10 @@ class SoundRecorderAnalyzer(object):
         self.smooth_transform_write(df_full, 'actual amplitude', 4 * self.record_secs)
         self.construct_rolling_volume(df_full, 'actual amplitude', rolling_window * self.frames_to_record)
 
+    def run(self):
+        self.initialize()
+        self.record_hours()
+        return self.image_paths
 
     def smooth_transform_write(self, df, col, multiplier=1, datetime_index=True):
         if not os.path.exists('audio_graphs\\' + self.name):
@@ -119,13 +136,17 @@ class SoundRecorderAnalyzer(object):
             df.index = pd.DatetimeIndex((df['start_time'] - 3600 * 5) * 10 ** 9)  # utc offset, convert from sec to nano
         df_aa = self.smooth_graph(df, col, multiplier=multiplier)
         df_aa.plot(figsize=(50, 30))
-        plt.savefig('audio_graphs\\%s\\%s_(%s).png' % (self.name, col, str(time.time()).split('.')[0]))
+        fp = 'audio_graphs\\%s\\%s_(%s).png' % (self.name, col, str(time.time()).split('.')[0])
+        self.image_paths[col] = fp
+        plt.savefig(fp)
 
         df.loc[df[col] == 0, col] = 1
         df['log_%s' % col] = np.log(df[col])
         df_laa = self.smooth_graph(df, 'log_%s' % col, multiplier=multiplier)
         df_laa.plot(figsize=(50, 30))
-        plt.savefig('audio_graphs\\%s\\log_%s_(%s).png' % (self.name, col, str(time.time()).split('.')[0]))
+        fp_log = 'audio_graphs\\%s\\log_%s_(%s).png' % (self.name, col, str(time.time()).split('.')[0])
+        self.image_paths['Log(%s)' % col] = fp_log
+        plt.savefig(fp_log)
 
     def construct_rolling_volume(self,df, col, window_base):
         df[col + '_rolling_' + str(window_base)] = df[col].rolling(window=window_base).sum() / window_base
@@ -133,7 +154,9 @@ class SoundRecorderAnalyzer(object):
         df[col + '_rolling_' + str(window_base * 4)] = df[col].rolling(window=window_base * 4).sum() / (4*window_base)
         df[[col + '_rolling_' + str(window_base), col + '_rolling_' + str(window_base * 2),
             col + '_rolling_' + str(window_base * 4)]].plot(figsize=(50, 30))
-        plt.savefig('audio_graphs\\%s\\%s_rolling_(%s).png' % (self.name, col, str(time.time()).split('.')[0]))
+        fp = 'audio_graphs\\%s\\%s_rolling_(%s).png' % (self.name, col, str(time.time()).split('.')[0])
+        self.image_paths['Rolling ' + col] = fp
+        plt.savefig(fp)
 
     @staticmethod
     def smooth_graph(df, col, multiplier):

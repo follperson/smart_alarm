@@ -64,8 +64,7 @@ class WakeupSpeaker():
             self.play_stream.write(response.audio_content)
             self.play_stream.stop_stream()
 
-
-    def close():
+    def close(self):
         self.play_stream.close()
         self.play_audio.terminate()
 

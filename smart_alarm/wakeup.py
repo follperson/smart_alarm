@@ -66,12 +66,12 @@ def view():
                 aid = str(alarm.id)
                 if aid in request.form:
                     break
-            assert aid in request.form
+            assert aid in request.form, 'You must select an AlarmID which matches the current running AlarmIDs'
             if request.form[aid] == 'Snooze':
                 if alarm.running:
                     alarm.snooze()
-            elif request.form[aid] == 'TurnOff':
-                print('Turnoff %s %s' % (aid, alarm.on))
+            elif request.form[aid] == 'Turn On/Off':
+                print('TurnOnOff %s %s' % (aid, alarm.on))
                 if alarm.on:
                     alarm.turnoff()
                 else:
@@ -191,8 +191,6 @@ class Alarm(Thread):
     def get_alarm(self):
         self._get_alarm_db()
         self._get_alarm_countdown()
-
-    # todo put generic snooze in
 
     def turnoff(self, change_db=True):
         self.on = False

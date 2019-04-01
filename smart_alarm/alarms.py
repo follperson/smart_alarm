@@ -24,7 +24,6 @@ def create():
     color_profile = None
     use = 'create'
     if request.method == 'POST':
-        print(request.form)
         time = request.form['time']
         name = request.form['name']
         sound_profile = request.form['sound_profile']
@@ -45,7 +44,6 @@ def create():
         if sound_profile_id is None:
             error.append('Color profile {} is not defined'.format(color_profile))
         if not error:
-            print('Commit Create')
             db.execute(
                 'INSERT INTO alarms (name, modified, alarm_time, active, sound_profile, color_profile, repeat_monday, '
                 'repeat_tuesday, repeat_wednesday, repeat_thursday, repeat_friday, repeat_saturday, repeat_sunday) '
@@ -55,7 +53,6 @@ def create():
             )
             db.commit()
 
-            # print(url_for(create_alarm))
             return render_template('alarms/success.html', params={'name':name, 'action':'create alarm', 'return':url_for('alarm.create')})
         flash('. '.join(error))
     return render_template('alarms/create_alarm.html', use=use, name=name, time=time, days=days,
@@ -63,7 +60,7 @@ def create():
                            sound_profiles=sound_profiles, color_profiles=color_profiles)
 
 
-#TODO: view = create/read/update/delete home
+#TODO: view = create/read/update/delete home (consolidate create and update, link them to view)
 @bp.route('/<int:id>/update/', methods=('GET', 'POST'))
 def update(id):
     db = get_db()
@@ -72,13 +69,10 @@ def update(id):
     alarm = db.execute(
         'SELECT name, alarm_time, active, sound_profile, color_profile, repeat_monday, repeat_tuesday, repeat_wednesday, repeat_thursday, repeat_friday, repeat_saturday, repeat_sunday FROM alarms WHERE id = ?',
         (id,)).fetchone()
-    print(alarm.keys())
     name = alarm['name']
     time = alarm['alarm_time']
     days = [[i, alarm['repeat_' + calendar.day_name[i].lower()]] for i in range(7)]
-    print('Days Raw',days)
     days = [i[0] for i in days if i[1]]
-    print('Days Filter',days)
     active = alarm['active']
     error = []
     try:
@@ -92,7 +86,6 @@ def update(id):
     use = 'update'
 
     if request.method == 'POST':
-        print(request.form)
         time = request.form['time']
         name = request.form['name']
         sound_profile = request.form['sound_profile']
@@ -110,7 +103,6 @@ def update(id):
         except AssertionError as known:
             error.append(str(known))
         if not error:
-            print('Commit update')
             db.execute(
                 'UPDATE alarms SET name = ?, alarm_time = ?, active = ?, sound_profile = ?, color_profile = ?, repeat_monday = ?, repeat_tuesday = ?, repeat_wednesday = ?, repeat_thursday = ?, repeat_friday = ?, repeat_saturday = ?, repeat_sunday = ?, modified = ? WHERE id = ?',
                 (name, time, active, sound_profile_id['id'], color_profile_id['id'], 0 in days, 1 in days, 2 in days, 3 in days, 4 in days,

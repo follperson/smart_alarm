@@ -42,10 +42,11 @@
               {% else %}
               <input width="30%" type="submit" name="{{alarm.id}}" value="Snooze">
               {% endif %}</td>
-          <td><input width="10%" type="submit" name="{{alarm.id}}" value="TurnOff"></td>
+          <td><input width="10%" type="submit" name="{{alarm.id}}" value="Turn On/Off"></td>
         </tr>
       {% endfor %}
       </table>
-  <button class="w3-button w3-round-large" type="Submit" name="snooze_generic" value="snooze_generic">Snooze Any Current Alarm</button>
+  <button class="button snooze" type="Submit" name="snooze_generic" value="snooze_generic">Snooze Any Current Alarm</button>
+  <w3-button class="w3-button w3-round-large" type="Submit" name="snooze_generic" value="snooze_generic">Snooze Any Current Alarm w3</w3-button>
   </form>
 {% endblock %}
