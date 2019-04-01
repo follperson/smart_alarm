@@ -2,7 +2,7 @@
 
 code for smart alarm run on raspberry pi. records sound to determine optimal wakeup. alarm is gradual using lights and calm sounds, ending in google voice generated morning wakeup text.
 
-not fully functioning yet. version 0.0.5
+audio functioning, light tbd. version 0.1.0
 
 
 needs light functionality added fully
