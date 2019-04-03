@@ -1,4 +1,4 @@
-from tinytag import TinyTag
+import subprocess
 import os
 import pandas as pd
 import hashlib
@@ -19,8 +19,19 @@ def scan_directory(root=r'C:\Users\follm\Documents\coding\smart_alarm_clock\asse
         for f in files:
             if f.split('.')[-1] in music_exts:
                 fp = _root + '\\' + f
-                tag = TinyTag.get(fp)
-                track_info = [tag.title, tag.album, tag.artist, tag.duration]
+                proc = subprocess.Popen(['ffprobe','-show_format',fp],stdout=subprocess.PIPE)
+                output = proc.stdout.read().decode().split('\n')
+                tag = dict()
+                for i in output:
+                    if '=' in i:
+                        tag[i.split('=')[0]] = i.split('=')[1]
+                track_info = []
+                for key in ['TAG:TITLE','TAG:ALBUM','TAG:ARTIST','duration']:
+                    try:
+                        val = tag[key]
+                    except KeyError as ok:
+                        val = ''
+                    track_info.append(val.strip())
                 data.append([fp, f, md5(fp)] + track_info)
     return pd.DataFrame(data, columns=['filepath','filename','hash','name','album','artist','duration'])
 
@@ -30,4 +41,5 @@ def update_songs():
 
 if __name__ == '__main__':
     # print(scan_directory().iloc[:,2:])
-    update_songs()
+    # update_songs()
+    print(scan_directory())

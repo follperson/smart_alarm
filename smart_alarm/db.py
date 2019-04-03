@@ -31,6 +31,8 @@ def init_db():
         root = r'C:\Users\follm\Documents\coding\smart_alarm_clock'
     elif os.path.exists(r'C:\Users\Andrew Follmann\Documents\projects\alarm_clock'):
         root = r'C:\Users\Andrew Follmann\Documents\projects\alarm_clock'
+    elif os.path.exists(r'/home/pi/alarm/smart_alarm_clock'):
+        root = r'/home/pi/alarm/smart_alarm_clock'
     sys.path.append(root)
     from smart_alarm.code import music_metadata
 
