@@ -5,6 +5,7 @@ from .config import api_key_weather
 
 
 def get_forecast_entry(table):
+    """ collect all the information about the weather for today/tonight """
     entries = table.find_all('div')
     for i in entries:
         if i.text == 'Today':
@@ -14,8 +15,12 @@ def get_forecast_entry(table):
             return i
 
 
-def get_weather_nws():
-    page = get('https://forecast.weather.gov/MapClick.php?textField1=38.96&textField2=-77.03')
+def get_weather_nws(location = 'MapClick.php?textField1=38.96&textField2=-77.03'): # todo make it more flexible with location?
+    """
+      get weather data from the National Weather Services, parsing using Beatuiful Soup
+    """
+    # get the weather for the location
+    page = get('https://forecast.weather.gov/' + location)
     soup = BeautifulSoup(page.content, features='html.parser')
     detail_forecast_table = soup.find('div', {'id': 'detailed-forecast-body'})
     today = get_forecast_entry(detail_forecast_table)
@@ -75,12 +80,12 @@ def parse_owm(info):
             resp.append('It\' raining a bit outside.')
         else:
             resp.append("It\'s drizzling outside.")
-    if temp < 80:
+    if temp < 75: # only report wind_chill if its cold, 
         if wind_chill > temp:
             report_temp = temp
         else:
             report_temp = wind_chill
-    else:
+    else: # only report heat_index if it is hot
         report_temp = heat_index
 
     resp.append('The temperature outside now is %s degrees.' % str(int(report_temp)))
