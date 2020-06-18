@@ -1,10 +1,24 @@
 from calendar import day_name
 
 def get_profile_from_id(db, val, table):
+    """ 
+      Get name using id from arbitrary table
+    inputs:
+      db: database to be queried
+      val: id
+      table: table to be queried
+    """
     return _get_profile('name','id', val, table, db)
 
 
 def get_profile_from_name(db, val, table):
+    """ 
+      Get id using name from arbitrary table
+    inputs:
+      db: database to be queried
+      val: name
+      table: table to be queried
+    """
     return _get_profile('id','name', val, table, db)
 
 

@@ -9,9 +9,13 @@ bp = Blueprint('sound', __name__, url_prefix='/sound')
 
 @bp.route('/view', methods=('GET',))
 def view():
+    """
+       Look at sound profiles and their associated alarms (if any)
+    """
     db = get_db()
-    df = pd.read_sql('SELECT * FROM playlists', con=db)
+    df = pd.read_sql('SELECT * FROM playlists', con=db) # do this in sql...?
     df_alarms = pd.read_sql('SELECT * FROM alarms', con=db)
+    # combine playlist and alarm tables, rename
     df = pd.merge(df, df_alarms[['name', 'sound_profile']], how='left', right_on='sound_profile',
                   left_on='id', suffixes=['_playlist', '_alarm'])
     df = df.rename(columns={'name_alarm':'Alarm Name','name_playlist':'Playlist Name','time_span':'Time Span','playlist_id':'id'})
@@ -22,16 +26,21 @@ def view():
 
 @bp.route('/create', methods=('GET','POST'))
 def create():
+    """
+    allow user to create playlist
+    """
     if request.method == 'POST':
         error = []
         db = get_db()
         name = request.form['name']
         try:
+            # check if the playlist name is already taken
             get_profile_from_name(db, name, 'playlists')
             error.append('Please choose another name, %s is already defined' % name)
         except AssertionError:
             pass
         if not error:
+            # insert playlist name, then redirect the user to the playlist update page to choose audio
             db.execute('INSERT INTO playlists (name) VALUES (?)',(name,))
             db.commit()
             db = get_db()
@@ -43,30 +52,44 @@ def create():
 
 @bp.route('/<int:id>/view', methods=('GET',))
 def view_playlist(id):
-    db = get_db()
-    name = get_profile_from_id(db,id, 'playlists')
+    """ Look at all the audio specifications for a single playlist"""
+    db = get_db() 
+
+    # I could do all this in one sql query... is that better or worse? Faster, cleaner. more web dev less pythonic. harder to debug
+    name = get_profile_from_id(db, id, 'playlists')
     df = pd.read_sql('SELECT * FROM playlist WHERE playlist_id=%s' % id, con=db)
+
+    # get the audio information for those tracks which are in the current playlist
     df_audio = pd.read_sql('SELECT * FROM audio', con=db).rename(columns={'id':'audio_id','name':'Audio Name'})
     df = pd.merge(df, df_audio, how='left', on='audio_id').sort_values('playlist_order').rename(columns={'playlist_order':'Order','audio_start':'Start Time','audio_end':'End Time'})
+    
     return render_template('sound_color/view_playlist.html', name=name, df=df[['playlist_id', 'Order', 'Audio Name','Start Time', 'End Time']], id=id)
 
 
 @bp.route('/<int:id>/update',methods=('GET','POST'))
 def update(id):
+    """ select songs and set song lengths for given audio profile (overwrites previously set information)"""
+    
+    # todo - fill in the template with the audio playlist info
     db = get_db()
     name = get_profile_from_id(db, id, 'playlists')
+    
+    # get playlist and song info
     df = pd.read_sql('SELECT * FROM playlist WHERE playlist_id=%s' % id, con=db)
     df_audio = pd.read_sql('SELECT * FROM audio', con=db).rename(columns={'id':"audio_id"})
     df = pd.merge(df, df_audio, how='outer', on='audio_id',suffixes=['_playlist','_audio'])
     df = df.fillna('').sort_values(['playlist_order','name','filename'])
     df['duration'] = ceil(df['duration'])
+    
     int_cols = ['playlist_order','audio_start','audio_end']
     cols_to_show = ['filename','album','artist','duration','audio_start','audio_end','playlist_order']
-    if request.method == 'POST':
-        print(request.form)
-        if 'cancel' in request.form:
+    if request.method == 'POST': # putting update
+        print(request.form) # reference
+
+        if 'cancel' in request.form: # dont update 
             flash('Update Cancelled')
             return redirect(url_for('.view_playlist', id=id))
+        
         elif 'submit' in request.form:
             mod_songs = [tag.split('_')[-1] for tag in request.form if 'update' in tag]
             print(mod_songs)
@@ -75,7 +98,10 @@ def update(id):
             print(updates)
             updates = verify_updates(updates)
 
-            db.execute('DELETE FROM playlist WHERE playlist_id = ?', (id,))
+            # todo use sql UPDATE not DELETE/INSERT
+            db.execute('DELETE FROM playlist WHERE playlist_id = ?', (id,)) # drop old playlist, insert updated playlist 
+            
+            # update playlist with each audio item and it's specification
             for song in updates:
                 update_input = tuple([updates[song][field] for field in fields] + [song, id])
                 # print(update_input)
@@ -84,6 +110,7 @@ def update(id):
             db.commit()
             flash('Success!')
             return redirect(url_for('.view_playlist', id=id))
+    
     return render_template('sound_color/modify_playlist.html',name=name, df=df, int_cols=int_cols,
                            cols_to_show=cols_to_show)
 

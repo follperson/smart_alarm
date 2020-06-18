@@ -3,6 +3,8 @@ import os
 from .db import get_db
 import pandas as pd
 
+# todo
+
 bp = Blueprint('color', __name__, url_prefix='/color')
 
 @bp.route('/create', methods=('GET', 'POST'))
