@@ -16,7 +16,7 @@ def get_wake_time(wakeup_hour=7.):
 def record_ready(num_hours=1., to_record=False, name=SoundRecorderAnalyzer.Names.WORK, record_period=10):
     sleep_period = 0
     sound_recorder = SoundRecorderAnalyzer(name, record_secs=record_period, sleep_period=sleep_period, to_record=to_record)
-    sound_recorder.record_hours(num_hours=num_hours)
+    sound_recorder.record_hours()
 
 
 def record_ready_slowroll(num_hours=1, to_record=False, name=SoundRecorderAnalyzer.Names.WORK, record_period=10, wake_window=30):
@@ -24,7 +24,7 @@ def record_ready_slowroll(num_hours=1, to_record=False, name=SoundRecorderAnalyz
     print('Begin',start)
     sleep_period = 0
     sound_recorder = SoundRecorderAnalyzer(name, record_secs=record_period, sleep_period=sleep_period, to_record=to_record)
-    sound_recorder.record_hours(num_hours=num_hours - wake_window / 60)
+    sound_recorder.record_hours()
 
     example_song = r"C:\Users\follm\Downloads\torrents\audio\Brian Eno - Ambient 1 Music for Airports Electronic\Brian Eno - Ambient 1 Music for Airports [FLAC-Lossless]\01 Brian Eno - 1-1.flac"
     try:

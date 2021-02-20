@@ -1,9 +1,14 @@
 # smart_alarm
 
-code for smart alarm run on raspberry pi. records sound to determine optimal wakeup. alarm is gradual using lights and calm sounds, ending in google voice generated morning wakeup text.
+code repository for an alarm, run on raspberry pi. 
 
-audio functioning, light tbd. version 0.1.0
+flask app interface to set / update / snooze alarms. 
 
+You set alarm start time, wake up time interval. Sounds and lights slowly rise over interval, ending in google voice generated wake up voice.
+
+audio raise and alarm basics function. Light non-functioning. Audio recording functioning, but intelligent alarm time does not and will not be functioning in 1.0.0
+ 
+current version is 0.1.0
 
 needs light functionality added fully
 needs music functionality

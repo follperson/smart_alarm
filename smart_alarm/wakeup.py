@@ -165,6 +165,7 @@ class Alarm(Thread):
                 return
         read_weather_quote()
         self.running = False
+        print('Completed Alarm Sequence for %s' % self.name)
 
     def run(self):
         while self.on:
@@ -230,11 +231,12 @@ class Alarm(Thread):
                     next_day = day
                     days_from_now = get_days_from_now(today, next_day)
                     break
-        self.next_alarm_datetime = dt.datetime.combine(now.date() + dt.timedelta(days=days_from_now), dt.time(alarm_hour,alarm_min))
+        self.next_alarm_datetime = dt.datetime.combine(now.date() + dt.timedelta(days=days_from_now), dt.time(alarm_hour, alarm_min))
         return self.next_alarm_datetime
 
     def get_time_til_wake(self):
-        self.time_til_wake = self.next_alarm_datetime - dt.datetime.now()
+        time_til_wake = self.next_alarm_datetime - dt.datetime.now()
+        self.time_til_wake = time_til_wake - dt.timedelta(microseconds=time_til_wake.microseconds)
         return self.time_til_wake
 
 

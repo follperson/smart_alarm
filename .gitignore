@@ -24,3 +24,8 @@ htmlcov/
 dist/
 build/
 *.egg-info/
+data_collection/
+audio_graphs/
+audio_records/
+temp_audio/
+assets/sounds/

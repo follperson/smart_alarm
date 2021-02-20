@@ -136,7 +136,7 @@ class Song(Thread):
             if self.stopped(): # thread can be stopped externally, so keep checking
                 break
             stream.write(data) # play the audio data just written
-        
+
         stream.stop_stream() # end the audio stream
         self.stop() # end the audio device
 

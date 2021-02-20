@@ -4,6 +4,7 @@ Blueprint, flash, g, redirect, render_template, request, session, url_for
 import pandas as pd
 import calendar
 import datetime as dt
+from smart_alarm.code.exceptions import PlaylistNotFound, EmptyTable
 from .utils import _get_profiles, get_profile_from_id, get_profile_from_name, get_repeat_dates
 from .db import get_db
 
@@ -124,11 +125,11 @@ def update(id):
             error.append("Please select a day for this alarm")
         try:
             sound_profile_id = get_profile_from_name(db, sound_profile, 'playlists')
-        except AssertionError as known:
+        except PlaylistNotFound as known:
             error.append(str(known))
         try:
             color_profile_id = get_profile_from_name(db, color_profile, 'color_profiles')
-        except AssertionError as known:
+        except PlaylistNotFound as known:
             error.append(str(known))
         
         # update database with the information in the form
