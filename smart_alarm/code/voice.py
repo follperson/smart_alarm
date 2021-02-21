@@ -20,15 +20,15 @@ class WakeupSpeaker():
         self.client = texttospeech.TextToSpeechClient()
         self.voice = None
         self.samp_rate = None
-        self.audio_config = texttospeech.types.AudioConfig(audio_encoding=texttospeech.enums.AudioEncoding.LINEAR16)
+        self.audio_config = texttospeech.AudioConfig(audio_encoding=texttospeech.AudioEncoding.LINEAR16)
         self.play_audio = pyaudio.PyAudio()
         self.play_stream = None
 
-
     def set_stream(self):
-        channels = 1
-        audio_format = pyaudio.paInt16
-        self.play_stream = self.play_audio.open(format=audio_format, channels=channels, rate=self.samp_rate,
+        if self.play_stream is None:
+            channels = 1
+            audio_format = pyaudio.paInt16
+            self.play_stream = self.play_audio.open(format=audio_format, channels=channels, rate=self.samp_rate,
                                                 output=True)
 
     def initialize(self):
@@ -37,25 +37,27 @@ class WakeupSpeaker():
 
     def choose_voice(self, voice_info=None):
         if voice_info is None:
-            voices = self.client.list_voices('en')
+            voices = self.client.list_voices(language_code='en')
             voice_info_list = [[voice.name, voice.natural_sample_rate_hertz] for voice in voices.voices]
             voice_info = randomly_select_from_list(voice_info_list)
         choice, samp_rate = voice_info
         lang = '-'.join(choice.split('-')[:2])
         print(lang, choice, samp_rate)
-        self.voice = texttospeech.types.VoiceSelectionParams(language_code=lang, name=choice)
+        self.voice = texttospeech.VoiceSelectionParams(language_code=lang, name=choice)
         if samp_rate != self.samp_rate:
             self.samp_rate = samp_rate
             self.set_stream()
 
     def read_aloud(self, text, filename=None, write=False):
-        synthesis_input = texttospeech.types.SynthesisInput(text=text)
-        response = self.client.synthesize_speech(synthesis_input, self.voice, self.audio_config)
+        synthesis_input = texttospeech.SynthesisInput(text=text)
+        response = self.client.synthesize_speech(input=synthesis_input, voice=self.voice,
+                                                 audio_config=self.audio_config)
         if write:
             if filename is None:
                 filename = 'Testing'
             with open('%s.wav' % filename, 'wb') as out:
                 out.write(response.audio_content)
+            # todo: wait here in a better way
             os.system("start %s.wav" % filename)
             sleep_time = int(text.count(' ') / 1.5)
             time.sleep(sleep_time)
@@ -74,6 +76,3 @@ def randomly_select_from_list(choices, neg_filter='ignore', pos_filter='-'):
     return choices[randint(len(choices))]
 
 # todo: https://cloud.google.com/speech-to-text/ (interpret us saying shutup)
-
-if __name__ == '__main__':
-    main()
