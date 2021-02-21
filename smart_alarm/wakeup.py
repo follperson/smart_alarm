@@ -8,7 +8,7 @@ from .code.wakeup import read_aloud as read_weather_quote
 from .code.play import Song
 from .utils import get_repeat_dates
 from flask import g, app, current_app, Blueprint, render_template, request, flash
-
+from typing import List
 bp = Blueprint('wakeup', __name__, url_prefix='/')
 
 # still i have to go to this wakeup page to initialize the watcher. not a big deal but i could proly do it another way
@@ -21,6 +21,8 @@ def close_watchers(e=None):
 
 def init_app(app):
     app.teardown_appcontext(close_watchers())
+
+
 
 
 def get_db_generic(db_params):
@@ -40,13 +42,17 @@ def get_watcher():
     current_app.watcher.check()
     return current_app.watcher
 
-
-def get_days_from_now(today, next_day):
-    days_from_now = 7 - today + next_day
-    if days_from_now >= 7:
-        return days_from_now - 7
-    return days_from_now
-
+def get_days_from_now(today: int, day_list:List[int]):
+    try:
+        next_day = [day for day in day_list if day > today][0]
+    except IndexError:
+        next_day = day_list[0]
+    if today < next_day:
+        return next_day - today
+    elif today == next_day:
+        return 7
+    else:
+        return 7 - today + next_day
 
 @bp.route('/', methods=('GET', 'POST'))
 def view():
@@ -218,20 +224,14 @@ class Alarm(Thread):
         today = now.weekday()
         alarm_hour = int(self.alarm_time.split(':')[0])
         alarm_min = int(self.alarm_time.split(':')[-1])
-        # print(self.name, today, self.repeat_days)
-        # print(self.name, '(',now.hour, '==', alarm_hour,' and ', now.minute, '<', alarm_min, ') or' , now.hour, '<', alarm_hour)
-        if today in self.repeat_days and (now.hour == alarm_hour and now.minute < alarm_min) or (now.hour < alarm_hour):
+        if today in self.repeat_days and (
+                (now.hour == alarm_hour and now.minute < alarm_min) or now.hour < alarm_hour):
             days_from_now = 0
-        elif not any([today <= day for day in self.repeat_days]):
-            next_day = self.repeat_days[0]
-            days_from_now = get_days_from_now(today, next_day)
         else:
-            for day in self.repeat_days:
-                if today < day:
-                    next_day = day
-                    days_from_now = get_days_from_now(today, next_day)
-                    break
-        self.next_alarm_datetime = dt.datetime.combine(now.date() + dt.timedelta(days=days_from_now), dt.time(alarm_hour, alarm_min))
+            days_from_now = get_days_from_now(today, self.repeat_days)
+        self.next_alarm_datetime = dt.datetime.combine(now.date() +
+                                                       dt.timedelta(days=days_from_now),
+                                                       dt.time(alarm_hour, alarm_min))
         return self.next_alarm_datetime
 
     def get_time_til_wake(self):
