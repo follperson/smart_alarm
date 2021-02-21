@@ -2,7 +2,7 @@ from flask import (Blueprint, flash, redirect, render_template, request, url_for
 from numpy import ceil
 import pandas as pd
 from .db import get_db
-from .utils import *
+from .code.utils import *
 
 bp = Blueprint('sound', __name__, url_prefix='/sound')
 
@@ -21,6 +21,7 @@ def view():
     df = df.rename(columns={'name_alarm':'Alarm Name','name_playlist':'Playlist Name','time_span':'Time Span','playlist_id':'id'})
     print(df)
     print(df.empty)
+    # render more info (like total length, names of songs?)
     return render_template('sound_color/view_playlists.html', df=df[['id', 'Playlist Name', 'Alarm Name']])
 
 
@@ -36,9 +37,10 @@ def create():
         try:
             # check if the playlist name is already taken
             get_profile_from_name(db, name, 'playlists')
-            error.append('Please choose another name, %s is already defined' % name)
-        except AssertionError:
+        except PlaylistNotFound:
             pass
+        else:
+            error.append('Please choose another name, %s is already defined' % name)
         if not error:
             # insert playlist name, then redirect the user to the playlist update page to choose audio
             db.execute('INSERT INTO playlists (name) VALUES (?)',(name,))

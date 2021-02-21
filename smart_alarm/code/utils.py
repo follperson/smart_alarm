@@ -1,5 +1,28 @@
 from calendar import day_name
-from smart_alarm.code.exceptions import PlaylistNotFound, EmptyTable
+from .exceptions import PlaylistNotFound, EmptyTable
+from flask import g
+import sqlite3
+
+
+def get_db_generic(db_params):
+    db = sqlite3.connect(db_params,
+                         detect_types=sqlite3.PARSE_DECLTYPES
+                         )
+    db.row_factory = sqlite3.Row
+    return db
+
+
+def init_app(app):
+    app.teardown_appcontext(close_watchers())
+
+
+def close_watchers(e=None):
+    watcher = g.pop('watcher', None)
+    if watcher is not None:
+        watcher.close()
+
+
+
 def get_profile_from_id(db, val, table):
     """ 
       Get name using id from arbitrary table
@@ -8,7 +31,7 @@ def get_profile_from_id(db, val, table):
       val: id
       table: table to be queried
     """
-    return _get_profile('name','id', val, table, db)
+    return _get_profile('name', 'id', val, table, db)
 
 
 def get_profile_from_name(db, val, table):
@@ -19,7 +42,7 @@ def get_profile_from_name(db, val, table):
       val: name
       table: table to be queried
     """
-    return _get_profile('id','name', val, table, db)
+    return _get_profile('id', 'name', val, table, db)
 
 
 def _get_profile(field_want, field_have, value, table, db):
@@ -38,7 +61,7 @@ def _get_profiles(fields_want, table, db):
     return val
 
 
-def get_repeat_dates(x,string=True):
+def get_repeat_dates(x, string=True):
     if string:
         return ', '.join([day_name[i] for i in range(7) if x['repeat_' + day_name[i].lower()]])
     else:

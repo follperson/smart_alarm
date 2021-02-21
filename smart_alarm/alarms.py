@@ -1,16 +1,16 @@
 from flask import (
-Blueprint, flash, g, redirect, render_template, request, session, url_for
+    Blueprint, flash, render_template, request, url_for
 )
 import pandas as pd
 import calendar
 import datetime as dt
-from smart_alarm.code.exceptions import PlaylistNotFound, EmptyTable
-from .utils import _get_profiles, get_profile_from_id, get_profile_from_name, get_repeat_dates
+from .code.exceptions import PlaylistNotFound
+from .code.utils import _get_profiles, get_profile_from_id, get_profile_from_name, get_repeat_dates
 from .db import get_db
 
 
 bp = Blueprint('alarm', __name__, url_prefix='/alarm')
-
+# todo - add a 'skip this part' to the activate screen so we can skip a song or the google audio stuff
 
 @bp.route('/create', methods=('GET', 'POST'))
 def create():
@@ -65,7 +65,8 @@ def create():
             db.commit()
             
             # return the success page
-            return render_template('alarms/success.html', params={'name':name, 'action':'create alarm', 'return':url_for('alarm.create')})
+            return render_template('alarms/success.html',
+                                   params={'name': name, 'action':'create alarm', 'return': url_for('alarm.create')})
         
         # there was an error, so flash the errors
         flash('. '.join(error))
@@ -161,7 +162,7 @@ def view():
 
     # if we have alarms in database, display them
     if not df.empty:
-        df['repeat_dates'] = df.apply(lambda x: get_repeat_dates(x), axis=1) # change int day to str days
+        df['repeat_dates'] = df.apply(get_repeat_dates, axis=1) # change int day to str days
         df['active'] = df['active'].astype(bool) 
         
         # Get names from color/sound profiles, not just id numbers
