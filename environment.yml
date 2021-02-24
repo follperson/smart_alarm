@@ -2,34 +2,31 @@ name: SmartAlarm
 channels:
   - defaults
 dependencies:
-  - pip=21.0.1=py36haa95532_0
-  - python=3.6.12=h5500b2f_2
-  - setuptools=52.0.0=py36haa95532_0
-  - sqlite=3.33.0=h2a8f88b_0
-  - vc=14.2=h21ff451_1
-  - vs2015_runtime=14.27.29016=h5e58377_2
-  - wheel=0.36.2=pyhd3eb1b0_0
-  - wincertstore=0.2=py36h7fe50ca_0
-  - zlib=1.2.11=h62dcd97_4
+  - pip
+  - python=3.6
+  - setuptools
+  - sqlite
+  - wheel
+  - zlib
   - pip:
-    - adafruit-blinka==6.2.2
-    - adafruit-circuitpython-busdevice==5.0.5
-    - adafruit-circuitpython-dotstar==2.0.1
-    - adafruit-circuitpython-pypixelbuf==2.2.3
-    - adafruit-platformdetect==3.1.1
-    - adafruit-pureio==1.1.8
-    - beautifulsoup4==4.9.3
-    - bs4==0.0.1
-    - cachetools==4.2.1
-    - certifi==2020.12.5
-    - chardet==4.0.0
-    - click==7.1.2
-    - comtypes==1.1.8
-    - cycler==0.10.0
-    - dataclasses==0.8
-    - enum34==1.1.10
+    - adafruit-blinka
+    - adafruit-circuitpython-busdevice
+    - adafruit-circuitpython-dotstar
+    - adafruit-circuitpython-pypixelbuf
+    - adafruit-platformdetect
+    - adafruit-pureio
+    - beautifulsoup4
+    - bs4
+    - cachetools
+    - certifi
+    - chardet
+    - click
+    - comtypes
+    - cycler
+    - dataclasses
+    - enum34
     - flask==1.1.2
-    - future==0.18.2
+    - future
     - google==3.0.0
     - google-api-core==1.26.0
     - google-auth==1.27.0
@@ -43,13 +40,12 @@ dependencies:
     - kiwisolver==1.3.1
     - libcst==0.3.17
     - markupsafe==1.1.1
-    - matplotlib==3.3.4
-    - mypy-extensions==0.4.3
-    - numpy==1.19.5
-    - packaging==20.9
-    - pandas==1.1.5
-    - pillow==8.1.0
-    - proto-plus==1.13.0
+    - mypy-extensions
+    - numpy
+    - packaging
+    - pandas
+    - pillow
+    - proto-plus
     - protobuf==3.15.1
     - psutil==5.8.0
     - pyasn1==0.4.8
@@ -74,4 +70,4 @@ dependencies:
     - typing-inspect==0.6.0
     - urllib3==1.26.3
     - werkzeug==1.0.1
-prefix: C:\Users\follm\miniconda3\envs\SmartAlarm
+

@@ -7,6 +7,7 @@ def get_watcher() -> AlarmWatcher:
     try:
         current_app.watcher
     except AttributeError as ok:
+        print('new watcher')
         watcher = AlarmWatcher()
         current_app.watcher = watcher
     current_app.watcher.check()

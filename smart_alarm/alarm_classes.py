@@ -9,7 +9,7 @@ from .code.play import Song
 from .code.utils import get_repeat_dates, get_db_generic
 from typing import List
 from flask import current_app
-
+# todo update self.time_left to 0 when alarm is going? 
 
 def get_days_from_now(today: int, day_list: List[int]):
     try:
@@ -25,6 +25,7 @@ def get_days_from_now(today: int, day_list: List[int]):
 
 class Alarm(Thread):
     def __init__(self, id, db_params, beg_vol=-30, end_vol=0, *args, **kwargs):
+        # todo only turn on alarm when we are starting it??
         self.id = id
         self.alarm_time = None
         self.sound_profile = None
@@ -34,7 +35,7 @@ class Alarm(Thread):
         self.on = False
         self.snoozed = False
         self.current_song = None
-        self.snooze_time = 10 # give this to the alarm table
+        self.snooze_time = 2 # give this to the alarm table
         self.snooze_time_left = 0
         self.next_alarm_datetime = None
         self.time_til_wake = None
@@ -51,6 +52,12 @@ class Alarm(Thread):
         fp, start, end, max_duration = self.sound_profile.df.loc[
             index, ['filepath', 'audio_start', 'audio_end', 'duration']]
         duration = max(end, max_duration)
+        if duration is None:
+            print('dura none')
+            duration = time_left
+        if time_left is None:
+            print('tl none')
+            time_left = duration 
         if start == -1:
             start = 0
         if duration > time_left:  # shouldnt happen
@@ -74,6 +81,7 @@ class Alarm(Thread):
                 for i in range(self.snooze_time * 60):
                     time.sleep(.99)
                     self.snooze_time_left = self.snooze_time * 60 - i
+                    self.next_alarm_datetime = dt.datetime.now() + dt.timedelta(seconds=time_left + self.snooze_time_left) # dev??
                 self.current_song.play()
                 print("le snooze is over")
                 self.snoozed = False
@@ -117,7 +125,7 @@ class Alarm(Thread):
         while self.on:
             if self.check():
                 self.start_alarm()
-            time.sleep(20)
+            time.sleep(1)
 
     def _get_alarm_db(self):
         db = get_db_generic(self.db_params)
@@ -248,6 +256,7 @@ class AlarmWatcher(Thread):
             Check the database for any new alarms we should be aware of
         :return:
         """
+        print('checking')
         db = self.get_db()
 
         # Look at the to find what we expect from the web app
@@ -271,7 +280,8 @@ class AlarmWatcher(Thread):
         for alarm_id in df_alarms.index:
             alarm = Alarm(alarm_id, self.db_params)
             self.alarms.append(alarm)
-
+        
+        
     def run(self):
         while not self.closed:
             time.sleep(20)
@@ -281,6 +291,6 @@ class AlarmWatcher(Thread):
         self.closed = True
 
     def get_alarm(self):
-        for alarm in self.alarms:
+        for alarm in self.alarms: # ugly
             if alarm.on:
                 return alarm

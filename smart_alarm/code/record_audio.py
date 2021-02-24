@@ -3,9 +3,8 @@ import wave
 import audioop
 import pandas as pd
 import time
-import matplotlib.pyplot as plt
 import datetime as dt
-from scipy.ndimage.filters import gaussian_filter1d
+
 import threading
 import os
 import numpy as np
@@ -190,6 +189,8 @@ class SoundRecorderAnalyzer(threading.Thread):
           multiplier: 
           datetime_index: boolean if we wish to coerce the x axis to a datetime
         """
+        import matplotlib.pyplot as plt
+
         if not os.path.exists('audio_graphs\\' + self.name):
             os.makedirs('audio_graphs\\' + self.name)
         if datetime_index:
@@ -232,6 +233,7 @@ class SoundRecorderAnalyzer(threading.Thread):
     @staticmethod
     def smoothing_calcs(df, col, smoothing_multiplier):
         """ gaussian filter of the data to reduce outliers (low pass filter), makes data smoother"""
+        from scipy.ndimage.filters import gaussian_filter1d
         df['%s_smoothed_gaussian_%s' % (col, 1 * smoothing_multiplier)] = gaussian_filter1d(df[col], 1 * smoothing_multiplier)
         df['%s_smoothed_gaussian_%s' % (col, 2 * smoothing_multiplier)] = gaussian_filter1d(df[col], 2*smoothing_multiplier)
         df['%s_smoothed_gaussian_%s' % (col, 4*smoothing_multiplier)] = gaussian_filter1d(df[col], 4*smoothing_multiplier)

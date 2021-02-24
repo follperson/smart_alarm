@@ -63,7 +63,8 @@ class Song(Thread):
       Audio player object building on Thread object and PyAudio
       Used to play audio files
     """
-    def __init__(self, f, min_vol=-60, max_vol=0, start_sec=0, end_sec=6000, *args, **kwargs):
+    def __init__(self, f, min_vol=-60, max_vol=0, start_sec=0, end_sec=6000,
+                 output_device_index=None, *args, **kwargs):
         """
         inputs:
             f: filepath of audiofile
@@ -72,19 +73,22 @@ class Song(Thread):
             start_sec: second of the song which we will start playing from
             end_sec: ending second of the song 
         """
-
+        print('initialize',f)
         # initalize audio object
         self.seg = AudioSegment.from_file(f)
+        # print('audiosegment set')
         # limit audio to be accessed to just the window between start and end seconds
-        self.seg = self.seg[start_sec*1000:end_sec*1000]
+        self.seg = self.seg[start_sec * SECOND:end_sec * SECOND]
         self.__is_paused = True
         self.p = PyAudio()
         self.cur_vol = min_vol
         self.max_vol = max_vol
         self.start_sec = start_sec
         self.end_sec = end_sec
+        self.output_device_index = output_device_index
         Thread.__init__(self, name=basename(f), *args, **kwargs)
-        
+        # print('Thread goes')
+
         # Thread functions
         self._stop_event = Event()
         self.start()
@@ -106,24 +110,36 @@ class Song(Thread):
         self.__is_paused = True
         self.p.terminate()
         self.stop()
-
+        #self.join(0)
+    
     def play(self):
         self.__is_paused = False
 
     def __get_stream(self):
         """ access the audio handler for playing audio"""
+        # print('open stream')
+        
+        if self.output_device_index is not None:
+            device_sample_rate = self.p.get_device_info_by_index(self.output_device_index)['defaultSampleRate'] 
+        else:
+            device_sample_rate = self.p.get_default_output_device_info()['defaultSampleRate']
+        device_sample_rate = int(device_sample_rate)        
+        sample_rate = max(device_sample_rate, self.seg.frame_rate)
         return self.p.open(format=self.p.get_format_from_width(self.seg.sample_width),
                            channels=self.seg.channels,
-                           rate=self.seg.frame_rate,
-                           output=True)
+                           rate=sample_rate,
+                           output=True,
+                           output_device_index=self.output_device_index)
+           
 
     def run(self):
         """ Kick off playing the audio """
         stream = self.__get_stream()
         chunk_count = 0
-        chunks = make_chunks(self.seg, 100)
+        chunks = make_chunks(self.seg, 100)[:-1]
         increment = abs(self.max_vol - self.cur_vol) / len(chunks)
         print('cur vol:', self.cur_vol, 'chunks ', len(chunks))
+        # print('writing')
         while chunk_count <= len(chunks) - 1:
             if not self.__is_paused: # write the audio content
                 cur_chunk = chunks[chunk_count] + self.cur_vol
@@ -138,7 +154,7 @@ class Song(Thread):
             stream.write(data) # play the audio data just written
 
         stream.stop_stream() # end the audio stream
-        self.stop() # end the audio device
+        self.quit() # end the audio device
 
 
 def main():

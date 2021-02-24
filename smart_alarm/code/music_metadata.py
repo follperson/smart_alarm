@@ -16,7 +16,7 @@ def md5(fname):
     return hash_md5.hexdigest()
 
 
-def scan_directory(root=r'C:\Users\follm\Documents\coding\smart_alarm_clock\assets'):
+def scan_directory(root=r'C:\Users\follm\Documents\coding\smart_alarm_clock\assets', max_filesize=100):
     """
       Iteratue through directory, gather metadata about all audio file types, and return the data as a pandas 
       dataframe.
@@ -35,7 +35,12 @@ def scan_directory(root=r'C:\Users\follm\Documents\coding\smart_alarm_clock\asse
         for f in files:
             # if the extension is recognized as an audio file
             if f.split('.')[-1].lower() in music_exts:
-                fp = _root + '\\' + f
+                fp = os.path.join(_root, f)
+                
+                # we have some hard limits on 32 bit rpi ...? so we have to limit it
+                size_mb = os.stat(fp).st_size / 1024 ** 2
+                if size_mb > max_filesize: 
+                    continue
                 
                 # gather metadata about the audio using the ffprobe cmdlet
                 proc = subprocess.Popen(['ffprobe','-show_format',fp],stdout=subprocess.PIPE)
@@ -58,7 +63,7 @@ def scan_directory(root=r'C:\Users\follm\Documents\coding\smart_alarm_clock\asse
 
 def update_songs():
     df = scan_directory()
-    df.to_csv('assets\\playlists\\songs.csv')
+    df.to_csv('assets/playlists/songs.csv')
 
 if __name__ == '__main__':
     # print(scan_directory().iloc[:,2:])
