@@ -16,7 +16,7 @@ def md5(fname):
     return hash_md5.hexdigest()
 
 
-def scan_directory(root=r'C:\Users\follm\Documents\coding\smart_alarm_clock\assets', max_filesize=100):
+def scan_directory(root=r'C:\Users\follm\Documents\coding\smart_alarm_clock\assets', max_filesize=100) -> pd.DataFrame:
     """
       Iteratue through directory, gather metadata about all audio file types, and return the data as a pandas 
       dataframe.
@@ -43,7 +43,7 @@ def scan_directory(root=r'C:\Users\follm\Documents\coding\smart_alarm_clock\asse
                     continue
                 
                 # gather metadata about the audio using the ffprobe cmdlet
-                proc = subprocess.Popen(['ffprobe','-show_format',fp],stdout=subprocess.PIPE)
+                proc = subprocess.Popen(['ffprobe', '-show_format', fp], stdout=subprocess.PIPE)
                 output = proc.stdout.read().decode().split('\n')
                 tag = dict()
 
@@ -52,14 +52,18 @@ def scan_directory(root=r'C:\Users\follm\Documents\coding\smart_alarm_clock\asse
                     if '=' in i:
                         tag[i.split('=')[0]] = i.split('=')[1]
                 track_info = []
-                for key in ['TAG:TITLE','TAG:ALBUM','TAG:ARTIST','duration']:
+                for key in ['TAG:title', 'TAG:album', 'TAG:artist', 'duration']:
                     try:
                         val = tag[key]
                     except KeyError as ok:
                         val = ''
                     track_info.append(val.strip())
                 data.append([fp, f, md5(fp)] + track_info)
-    return pd.DataFrame(data, columns=['filepath','filename','hash','name','album','artist','duration'])
+    df = pd.DataFrame(data, columns=['filepath', 'filename', 'hash', 'name', 'album', 'artist', 'duration'])
+    df.loc[df['name'] == '', 'name'] = df.loc[df['name'] == '', 'filename']
+    df.loc[df['album'] == '', 'album'] = df.loc[df['album'] == '', 'filepath'].str.split(os.path.sep).str[-1]
+    df.loc[df['artist'] == '', 'artist'] = df.loc[df['artist'] == '', 'filepath'].str.split(os.path.sep).str[-2]
+    return df
 
 def update_songs():
     df = scan_directory()

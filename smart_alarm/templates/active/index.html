@@ -14,15 +14,15 @@
           <th>Wake Window</th>
           <th>Snooze Time</th>
           <th>Next Alarm Time</th>
-          <th>Time Til Next Alarm</th>
           <th width="30%"> Snooze </th>
           <th width="10%"> Turn on/off</th>
         </tr></thead>
-      {% for alarm in alarms %}
-        {% if alarm.on %}
-          {% if alarm.snoozed %}
+      {% for alarm_id in alarms %}
+
+        {% if alarms[alarm_id]['active'] %}
+          {% if alarms[alarm_id]['snoozed'] %}
             <tr bgcolor="yellow">
-          {% elif alarm.running %}
+          {% elif alarms[alarm_id]['running'] %}
             <tr bgcolor="darkviolet">
           {% else %}
             <tr bgcolor="greenyellow">
@@ -30,23 +30,21 @@
         {% else %}
           <tr bgcolor="salmon">
         {% endif %}
-          <td>{{alarm.name}}</td>
-          <td>{{alarm.alarm_time}}</td>
-          <td>{{alarm.sound_profile.name}}</td>
-          <td>{{alarm.wake_window}}</td>
-          <td>{{alarm.snooze_time}}</td>
-          <td>{{alarm.next_alarm_datetime}}</td>
-          <td>{{alarm.time_til_wake|string()}}</td>
-          <td>{% if alarm.snoozed %}
-              {{ alarm.snooze_time_left }} seconds left of snooze
-              {% else %}
-              <input width="30%" type="submit" name="{{alarm.id}}" value="Snooze">
+          <td>{{alarms[alarm_id]['name']}}</td>
+          <td>{{alarms[alarm_id]['alarm_time']}}</td>
+          <td>{{alarms[alarm_id]['playlist_name']}}</td>
+          <td>{{alarms[alarm_id]['wake_window']}}</td>
+          <td>{{alarms[alarm_id]['snooze_time']}}</td>
+          <td>{{alarms[alarm_id]['next_alarm_time']}}</td>
+          <td>{% if alarms[alarm_id]['snoozed'] %}
+              {{ alarms[alarm_id]['snooze_time_left'] }} seconds left of snooze
+              {% elif alarms[alarm_id]['running'] %}
+            <input width="30%" type="submit" name="snooze_{{alarm_id}}" value="Snooze">
               {% endif %}</td>
-          <td><input width="10%" type="submit" name="{{alarm.id}}" value="Turn On/Off"></td>
+          <td><input width="10%" type="submit" name="io_{{alarm_id}}" value="Turn On/Off"></td>
         </tr>
       {% endfor %}
       </table>
   <button class="button snooze" type="Submit" name="snooze_generic" value="snooze_generic">Snooze Any Current Alarm</button>
-  <w3-button class="w3-button w3-round-large" type="Submit" name="snooze_generic" value="snooze_generic">Snooze Any Current Alarm w3</w3-button>
   </form>
 {% endblock %}

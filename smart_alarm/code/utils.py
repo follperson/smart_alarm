@@ -1,6 +1,7 @@
 from calendar import day_name
 from .exceptions import PlaylistNotFound, EmptyTable
 from flask import g
+import pandas as pd
 import sqlite3
 
 

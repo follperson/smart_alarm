@@ -21,7 +21,7 @@
         {% for col in cols_to_show%}
         <td>
             {% if col in int_cols %}
-                <input type="number" name="{{row['audio_id']}}_{{col}}" value="{{row['audio_id']}}_{{col}}" max="{{row['duration']}}">
+                <input type="number" name="{{row['audio_id']}}_{{col}}" value="{{row['audio_id']}}_{{col}}" min=0 max="{{row['duration']}}">
             {% else %}
                 {{ row[col] }}
             {% endif %}

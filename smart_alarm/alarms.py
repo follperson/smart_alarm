@@ -55,12 +55,16 @@ def create():
         
         # update the database with the new alarm information
         if not error:
+            wake_window = db.execute("SELECT wake_window FROM playlists WHERE id = ?;", (sound_profile_id['id'],)
+                                         ).fetchone()['wake_window']
+            print(wake_window)
             db.execute(
-                'INSERT INTO alarms (name, modified, alarm_time, active, sound_profile, color_profile, repeat_monday, '
+                'INSERT INTO alarms (name, modified, alarm_time, active, wake_window, '
+                'sound_profile, color_profile, repeat_monday, '
                 'repeat_tuesday, repeat_wednesday, repeat_thursday, repeat_friday, repeat_saturday, repeat_sunday) '
-                'VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
-                (name, dt.datetime.now(), time, active, sound_profile_id['id'], color_profile_id['id'], 0 in days, 1 in days, 2 in days, 3 in days,
-                 4 in days, 5 in days, 6 in days,)
+                'VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+                (name, dt.datetime.now(), time, active, wake_window, sound_profile_id['id'], color_profile_id['id'],
+                 0 in days, 1 in days, 2 in days, 3 in days, 4 in days, 5 in days, 6 in days,)
             )
             db.commit()
             

@@ -35,7 +35,7 @@ def init_db():
         db.executescript(f.read().decode('utf8'))
     db = get_db()
     df = music_metadata.scan_directory(root, MAXFILESIZE)
-    df.to_sql('audio',con=db,if_exists='append',index=False)
+    df.to_sql('audio', con=db, if_exists='append', index=False)
 
 
 @click.command('init-db')

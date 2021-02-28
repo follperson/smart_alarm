@@ -73,7 +73,7 @@ class Song(Thread):
             start_sec: second of the song which we will start playing from
             end_sec: ending second of the song 
         """
-        print('initialize',f)
+        print('initialize', f)
         # initalize audio object
         self.seg = AudioSegment.from_file(f)
         # print('audiosegment set')
@@ -99,19 +99,13 @@ class Song(Thread):
 
     def stop(self):
         """ end the audio to kill the song """
+        # self.p.terminate()
         self._stop_event.set()
 
     def stopped(self):
         """ check if the thread is stopped """
         return self._stop_event.is_set()
 
-    def quit(self):
-        """ close the thread and the audio object """
-        self.__is_paused = True
-        self.p.terminate()
-        self.stop()
-        #self.join(0)
-    
     def play(self):
         self.__is_paused = False
 
@@ -130,7 +124,6 @@ class Song(Thread):
                            rate=sample_rate,
                            output=True,
                            output_device_index=self.output_device_index)
-           
 
     def run(self):
         """ Kick off playing the audio """
@@ -140,7 +133,7 @@ class Song(Thread):
         increment = abs(self.max_vol - self.cur_vol) / len(chunks)
         print('cur vol:', self.cur_vol, 'chunks ', len(chunks))
         # print('writing')
-        while chunk_count <= len(chunks) - 1:
+        while (chunk_count <= len(chunks) - 1) and not self.stopped():
             if not self.__is_paused: # write the audio content
                 cur_chunk = chunks[chunk_count] + self.cur_vol
                 data = cur_chunk._data
@@ -149,12 +142,10 @@ class Song(Thread):
             else: # write nullity to the data, play nothing.
                 free = stream.get_write_available()
                 data = chr(0) * free
-            if self.stopped(): # thread can be stopped externally, so keep checking
-                break
-            stream.write(data) # play the audio data just written
+            stream.write(data)  # play the audio data just written
 
-        stream.stop_stream() # end the audio stream
-        self.quit() # end the audio device
+        stream.stop_stream()  # end the audio stream
+        self.p.terminate()
 
 
 def main():
