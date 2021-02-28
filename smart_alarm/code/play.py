@@ -132,14 +132,13 @@ class Song(Thread):
         chunks = make_chunks(self.seg, 100)[:-1]
         increment = abs(self.max_vol - self.cur_vol) / len(chunks)
         print('cur vol:', self.cur_vol, 'chunks ', len(chunks))
-        # print('writing')
         while (chunk_count <= len(chunks) - 1) and not self.stopped():
             if not self.__is_paused: # write the audio content
                 cur_chunk = chunks[chunk_count] + self.cur_vol
                 data = cur_chunk._data
                 chunk_count += 1
                 self.cur_vol += increment
-            else: # write nullity to the data, play nothing.
+            else:  # write nullity to the data, play nothing.
                 free = stream.get_write_available()
                 data = chr(0) * free
             stream.write(data)  # play the audio data just written

@@ -1,7 +1,6 @@
 import pandas as pd
 from threading import Thread, Event
 import time
-import sqlite3
 import datetime as dt
 from math import ceil
 from .code.wakeup import read_aloud as read_weather_quote
@@ -10,7 +9,6 @@ from .code.utils import get_repeat_dates, get_db_generic
 from typing import List
 from flask import current_app
 
-# todo update self.time_left to 0 when alarm is going? 
 
 def get_days_from_now(today: int, day_list: List[int]):
     try:
