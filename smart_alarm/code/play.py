@@ -64,7 +64,7 @@ class Song(Thread):
       Used to play audio files
     """
     def __init__(self, f, min_vol=-60, max_vol=0, start_sec=0, end_sec=6000,
-                 output_device_index=None, *args, **kwargs):
+                 output_device_index=2, *args, **kwargs):
         """
         inputs:
             f: filepath of audiofile
@@ -144,7 +144,8 @@ class Song(Thread):
             stream.write(data)  # play the audio data just written
 
         stream.stop_stream()  # end the audio stream
-        self.p.terminate()
+        stream.close()
+        # self.p.terminate() # terminating this kills the whole flask app...? 
 
 
 def main():

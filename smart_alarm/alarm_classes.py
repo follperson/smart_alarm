@@ -25,7 +25,7 @@ def get_days_from_now(today: int, day_list: List[int]):
 
 class Alarm(Thread):
     def __init__(self, id, next_alarm_time, alarm_time, playlist, color_profile, wake_window, name, active,
-                 beg_vol=-30, end_vol=0, snooze_time=2,  *args, **kwargs):
+                 beg_vol=-30, end_vol=-10, snooze_time=2,  *args, **kwargs):
         self.alarm_id = id
         self.alarm_time = alarm_time
         self.next_alarm_time = next_alarm_time
@@ -36,6 +36,7 @@ class Alarm(Thread):
         self.snooze_min = snooze_time
         self.vol = beg_vol
         self.active = active
+        self.end_vol = end_vol
         self.vol_change_total = abs(end_vol - beg_vol)
 
         self.snoozed = False
@@ -55,9 +56,10 @@ class Alarm(Thread):
         if ceil(duration) <= 0:  # also shouldnt happen
             return  # need to be positive duration
         print(fp, time_left, duration)
-        vol_increase = self.vol_change_total * duration / time_left
-        local_max = self.vol + vol_increase
-        self.current_song = Song(fp, min_vol=self.vol, max_vol=local_max, start_sec=start, end_sec=ceil(duration))
+        vol_increase = self.vol_change_total * duration / time_left # something messed up here with snooze
+        local_max = min(self.vol + vol_increase, self.end_vol)
+        self.current_song = Song(fp, min_vol=self.vol, max_vol=local_max,
+                                 start_sec=start, end_sec=ceil(duration))
         self.current_song.play()
 
         snooze_check_window = .25
@@ -72,6 +74,7 @@ class Alarm(Thread):
             self.vol += vol_increase / check_periods
 
         self.current_song.stop()
+        self.current_song = None
         if self.vol != local_max:
             print('Current Volume is %s, supposed to be %s' % (self.vol, local_max))
 
@@ -103,7 +106,8 @@ class Alarm(Thread):
         if not self.stopped():
             read_weather_quote()
         print('Completed Alarm Sequence for %s' % self.alarm_name)
-
+        self.stop()
+        
     def stop(self):
         if self.current_song is not None:
             self.current_song.stop()
