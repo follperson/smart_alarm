@@ -2,9 +2,11 @@ import pandas as pd
 from threading import Thread, Event
 import time
 import datetime as dt
+import json
 from math import ceil
 from .code.wakeup import read_aloud as read_weather_quote
 from .code.play import Song
+from .code.color import ColorProfile, Colors
 from .code.utils import get_repeat_dates, get_db_generic
 from typing import List
 from flask import current_app
@@ -41,7 +43,10 @@ class Alarm(Thread):
 
         self.snoozed = False
         self.snooze_time_left = 0
+        
         self.current_song = None
+        self.colors = None
+        
         self.initialized_time = dt.datetime.now()
 
         Thread.__init__(self, *args, **kwargs)
@@ -80,8 +85,18 @@ class Alarm(Thread):
 
         return time_left
 
+    def play_colors(self):
+        print('loading colors', self.color_profile)
+        color_info = ColorProfile(**self.color_profile)
+        print('setting color')
+        self.colors = Colors(color_info, seconds=self.wake_window)
+        print('set, now playing')
+        self.colors.play()
+        print('done now')
+        
     def _snooze(self):
         print('le snooze')
+        self.colors.pause()
         self.current_song.pause()
         while self.snooze_time_left > 0:
             time.sleep(.99)
@@ -90,6 +105,7 @@ class Alarm(Thread):
                 return
         print('le snooze is over')
         self.current_song.play()
+        self.colors.play()
         self.snoozed = False
 
     def run(self):
@@ -97,6 +113,7 @@ class Alarm(Thread):
 
     def run_alarm(self):
         print('Beginning Alarm Sequence for %s' % self.alarm_name)
+        self.play_colors()
         time_left = self.wake_window
         for i in self.playlist.index:
             time_left = self.play_audio(i, time_left)
@@ -111,6 +128,8 @@ class Alarm(Thread):
     def stop(self):
         if self.current_song is not None:
             self.current_song.stop()
+        if self.colors is not None:
+            self.colors.stop()
         self._stop_event.set()
 
     def stopped(self):
@@ -160,7 +179,11 @@ class AlarmWatcher(Thread):
     def check(self):
         db = get_db_generic(self.db_params)
         # Look at the to find what we expect from the web app
-        df_alarms = pd.read_sql('SELECT * FROM alarms', con=db).set_index('id')
+        df_alarms = pd.read_sql("""SELECT * FROM alarms inner join 
+                                         (select id cid, profile cprofile from color_profiles) colors
+                                   on alarms.color_profile=colors.cid""", con=db).set_index('id')
+
+        df_alarms['color_profile'] = df_alarms['cprofile'].apply(json.loads)
         if df_alarms.empty:
             return
         df_alarms.loc[:, 'dow'] = df_alarms.apply(lambda x: get_repeat_dates(x, False), axis=1)
@@ -182,7 +205,10 @@ class AlarmWatcher(Thread):
             if alarm.active and \
                     not alarm.isAlive() and \
                     (alarm.next_alarm_time - dt.timedelta(seconds=int(alarm.wake_window)) < dt.datetime.now()):
-                alarm.start()
+                try:
+                    alarm.start()
+                except RuntimeError:
+                    raise MultipleAlarmStartAttempts
 
     def close(self):
         self.closed = True
@@ -196,7 +222,7 @@ class AlarmWatcher(Thread):
 def get_alarm(df_alarms, alarm_id, db):
     dow, alarm_time, wake_window, active, playlist_id, name, color_profile = df_alarms.loc[
         alarm_id, ['dow', 'alarm_time', 'wake_window', 'active', 'sound_profile', 'name', 'color_profile']]
-
+    
     next_alarm_time = get_next_alarm_time(alarm_time, dow)
 
     df_playlist = pd.read_sql('SELECT * FROM playlist INNER JOIN '
@@ -207,3 +233,7 @@ def get_alarm(df_alarms, alarm_id, db):
     return Alarm(id=alarm_id, name=name, alarm_time=alarm_time, next_alarm_time=next_alarm_time,
                  wake_window=wake_window, snooze_time=2,
                  playlist=df_playlist, color_profile=color_profile, active=active)
+
+class MultipleAlarmStartAttempts(Exception):
+    pass
+
