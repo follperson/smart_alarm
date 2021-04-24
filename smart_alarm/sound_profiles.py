@@ -123,9 +123,8 @@ def update(id):
                 wake_window += updates[song]['audio_end'] - updates[song]['audio_start']
                 update_input = tuple([updates[song][field] for field in fields] + [song, id])
                 text = 'INSERT INTO playlist (%s) VALUES (%s ?, ?)' % (
-                ', '.join(fields + ['audio_id', 'playlist_id']), '?, ' * (len(fields)))
+                        ', '.join(fields + ['audio_id', 'playlist_id']), '?, ' * (len(fields)))
                 db.execute(text, update_input)
-                updates[song]
             print('total',wake_window)
 
             db.execute('UPDATE playlists set wake_window = ? where id = ?;', (wake_window, id))

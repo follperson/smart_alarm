@@ -114,9 +114,12 @@ class Song(Thread):
         # print('open stream')
         
         if self.output_device_index is not None:
-            device_sample_rate = self.p.get_device_info_by_index(self.output_device_index)['defaultSampleRate'] 
+            info=self.p.get_device_info_by_index(self.output_device_index)
         else:
-            device_sample_rate = self.p.get_default_output_device_info()['defaultSampleRate']
+            info=device_sample_rate = self.p.get_default_output_device_info()
+        device_sample_rate = info['defaultSampleRate']
+        print('Audio Device Name:',info['name'])
+        
         device_sample_rate = int(device_sample_rate)        
         sample_rate = max(device_sample_rate, self.seg.frame_rate)
         return self.p.open(format=self.p.get_format_from_width(self.seg.sample_width),

@@ -9,18 +9,30 @@
   <ul>
     <li><label for="name">{{name}}Profile Name</label>
         <input name="name" id="name" required></li>
-    <li><label for="time_span">select time span prior to wakeup time</label>
-        <input type="number" name="time_span" id="time_span" required></li>
-      <!--<li><label for="profile_id">select profile</label>-->
-          <!--<select id="profile_id">-->
-          <!--{% for o in profiles %}-->
-            <!--{% if o.name == profile %}-->
-                <!--<option value="{{ o.name }}" selected>{{o.name}}</option>-->
-            <!--{% else %}-->
-                <!--<option value="{{ o.name }}">{{o.name}}</option>-->
-            <!--{% endif %}-->
-        <!--{% endfor %}-->
-              <!--</select>-->
+    <li><label><strong>Initial Color Value:</strong></label>
+        <label>Red</label>
+            <input type="number" name="R_start" id="R_start" value=0 required>
+        <label>Green</label>
+            <input type="number" name="G_start" id="G_start" value=0 required>
+        <label>Blue</label>
+        <input type="number" name="B_start" id="B_start" value=0 required></li>
+    <li><label><strong>End Color Value</strong></label>
+        <label>Red</label>
+            <input type="number" name="R_end" id="R_end" value=255 required>
+        <label>Green</label>
+            <input type="number" name="G_end" id="G_end" value=255 required>
+        <label>Blue</label>
+            <input type="number" name="B_end" id="B_end" value=255 required></li>
+    <li><label for="cycle"><strong>Cycle Pattern:</strong></label></li>
+        {% for i in range(10) %}
+        <label>Red</label>
+            <input type="number" name="R_{{i}}" id="R_{{i}}" value=0 required>
+        <label>Green</label>
+            <input type="number" name="G_{{i}}" id="G_{{i}}" value=0 required>
+        <label>Blue</label>
+            <input type="number" name="B_{{i}}" id="B_{{i}}" value=0 required>
+        <br>
+        {% endfor %}
   </ul>
       <input type="submit" value="Create">
   </form>

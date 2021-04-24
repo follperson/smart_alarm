@@ -29,7 +29,7 @@ CREATE TABLE alarms (
 
 CREATE TABLE color_profiles (
   id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
-  time_span INTEGER NOT NULL,
+  profile JSON NOT NULL,
   name TEXT NOT NULL
 );
 
