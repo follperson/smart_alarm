@@ -1,6 +1,7 @@
 from flask import (
     Blueprint, flash, render_template, request, url_for
 )
+from sqlite3 import IntegrityError
 import pandas as pd
 import calendar
 import datetime as dt
@@ -58,18 +59,21 @@ def create():
             wake_window = db.execute("SELECT wake_window FROM playlists WHERE id = ?;", (sound_profile_id['id'],)
                                          ).fetchone()['wake_window']
             print(wake_window)
-            db.execute(
-                'INSERT INTO alarms (name, modified, alarm_time, active, wake_window, '
-                'sound_profile, color_profile, repeat_monday, '
-                'repeat_tuesday, repeat_wednesday, repeat_thursday, repeat_friday, repeat_saturday, repeat_sunday) '
-                'VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
-                (name, dt.datetime.now(), time, active, wake_window, sound_profile_id['id'], color_profile_id['id'],
-                 0 in days, 1 in days, 2 in days, 3 in days, 4 in days, 5 in days, 6 in days,)
-            )
-            db.commit()
-            
+            try:
+                db.execute(
+                    'INSERT INTO alarms (name, modified, alarm_time, active, wake_window, '
+                    'sound_profile, color_profile, repeat_monday, '
+                    'repeat_tuesday, repeat_wednesday, repeat_thursday, repeat_friday, repeat_saturday, repeat_sunday) '
+                    'VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+                    (name, dt.datetime.now(), time, active, wake_window, sound_profile_id['id'], color_profile_id['id'],
+                     0 in days, 1 in days, 2 in days, 3 in days, 4 in days, 5 in days, 6 in days,)
+                )
+                db.commit()
+            except IntegrityError as e:
+                error = 'Integrity Error: ' + str(e)
             # return the success page
-            return render_template('alarms/success.html',
+            else:
+                return render_template('alarms/success.html',
                                    params={'name': name, 'action':'create alarm', 'return': url_for('alarm.create')})
         
         # there was an error, so flash the errors
