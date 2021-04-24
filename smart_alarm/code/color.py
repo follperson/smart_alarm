@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from threading import Thread, Event
 from typing import Tuple
 import json
-dots = dotstar.DotStar(board.SCLK, board.MOSI, 120, brightness=0.9)
+dots = dotstar.DotStar(board.SCLK, board.MOSI, 30, brightness=0.9)
 
 @dataclass
 class ColorProfile:
@@ -26,18 +26,6 @@ class ColorProfile:
         n = np.nanmin(diff / cycle_total)
 
         return int(n) * cycle_length
-
-    def save(self, filepath):
-        with open(filepath,'w') as fo:
-            json.dump({'cycle': self.cycle,
-                        'end':self.end,
-                        'start':self.start}, fo)
-        
-    @classmethod
-    def load(cls, filepath):
-        with open(filepath, 'r') as fo:
-            config = json.load(fo)
-        return cls(**config)
 
 
 class Colors(Thread):
@@ -98,13 +86,11 @@ class Colors(Thread):
             time.sleep(wait_seconds)
             
             ix = i % cycle_length
-            print('index', ix)
-            print('cycle length',len(self.profile.cycle))
+            
             increment = self.profile.cycle[ix]
             next_step = tuple(self.cur_colors[i] + increment[i] for i in [0,1,2])
             self.cur_colors = next_step
             
-            print(f'Step {i} out of {steps} ', self.cur_colors)
             
             while self.__is_paused:
                 print('paused')
@@ -121,22 +107,3 @@ class Colors(Thread):
         
         self.turn_off_dots()
         self.stop()
-
-def ctest():
-    #p=ColorProfile(cycle=((1,0,0),(0,2,0),(0,0,1),(1,0,0),(0,0,1)),
-    #            end=(255,255,255),start=(0,0,0))
-    p = ColorProfile.load('/home/pi/red_orange_only.json')
-    t = 120
-    c = Colors(p, t)
-    time.sleep(t)
-    #time.sleep(15)
-    #c.pause()
-    #time.sleep(10)
-    #c.play()
-    #time.sleep(10)
-    #c.pause()
-    #time.sleep(1)
-    #c.stop()
-
-if __name__ is "__main__":
-    ctest()

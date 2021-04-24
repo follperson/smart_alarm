@@ -7,8 +7,7 @@ import pandas as pd
 
 bp = Blueprint('color', __name__, url_prefix='/color')
 
-def process_profile_creation(form):
-    
+def process_profile_creation(form):   
     start = form['R_start'], form['G_start'], form['B_start']
     end = form['R_end'], form['G_end'], form['B_end']
     cycle = []
@@ -20,8 +19,6 @@ def process_profile_creation(form):
     for i, color  in enumerate(cycle[::-1]):
         if color != (0,0,0):
             break
-    print(i)
-    print(cycle[:-i])
     return {'start':start, 'end':end, 'cycle':tuple(cycle[:-i])}
 
 
@@ -81,5 +78,4 @@ def view():
     df['color cycle'] = df['profile'].str['cycle']
     df['start color'] = df['profile'].str['start']
     df['end color'] = df['profile'].str['end']
-    print(df)
     return render_template('sound_color/view_color_profiles.html', df=df[['id','Profile', 'Alarm', 'color cycle','start color','end color']])
