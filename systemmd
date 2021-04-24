@@ -1,0 +1,12 @@
+[Unit]
+Description=SmartAlarmFlaskApp
+After=network.target
+
+[Service]
+User=pi
+WorkingDirectory=/home/pi/coding/smart_alarm
+Environment="CONDA_ENV_PATH=/home/pi/.conda/envs/SmartAlarm PATH=/home/pi/.conda/envs/SmartAlarm/bin FLASK_APP=smart_alarm FLASK_ENV=development"
+ExecStart=flask run --host=0.0.0.0
+
+[Install]
+WantedBy=multi-user.target
