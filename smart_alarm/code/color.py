@@ -90,9 +90,9 @@ class Colors(Thread):
             increment = self.profile.cycle[ix]
             next_step = tuple(self.cur_colors[i] + increment[i] for i in [0,1,2])
             self.cur_colors = next_step
-            
-            
+
             while self.__is_paused:
+                self.turn_off_dots()
                 print('paused')
                 if self.stopped():
                     print('pause stopped')
