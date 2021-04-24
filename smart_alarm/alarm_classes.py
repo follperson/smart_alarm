@@ -49,7 +49,7 @@ class Alarm(Thread):
         
         self.initialized_time = dt.datetime.now()
 
-        Thread.__init__(self, *args, **kwargs)
+        Thread.__init__(self, *args, name=name, **kwargs)
         self._stop_event = Event()
 
     def play_audio(self, index, time_left):
@@ -207,8 +207,10 @@ class AlarmWatcher(Thread):
                     (alarm.next_alarm_time - dt.timedelta(seconds=int(alarm.wake_window)) < dt.datetime.now()):
                 try:
                     alarm.start()
-                except RuntimeError:
-                    raise MultipleAlarmStartAttempts
+                except RuntimeError as e:
+                    print('error:', e)
+                    # raise MultipleAlarmStartAttempts('Alarm:' + str(alarm.name))
+                    continue
 
     def close(self):
         self.closed = True
