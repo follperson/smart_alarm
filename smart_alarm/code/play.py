@@ -3,12 +3,15 @@ from pydub import AudioSegment
 from pydub.utils import make_chunks
 from pyaudio import PyAudio
 from threading import Thread, Event
-#from smart_alarm.db import get_db
 import time
 from math import ceil
 import pandas as pd
 SECOND = 1000
-
+p = PyAudio()
+try:
+    USBAUDIOID = [i for i in range(p.get_device_count()) if 'USB' in p.get_device_info_by_index(i)['name']][0]
+except IndexError:
+    USBAUDIOID = 0
 
 def get_playlist(name):
     df = pd.read_csv('assets\\playlists\\playlists.csv')
@@ -64,7 +67,7 @@ class Song(Thread):
       Used to play audio files
     """
     def __init__(self, f, min_vol=-60, max_vol=0, start_sec=0, end_sec=6000,
-                 output_device_index=2, *args, **kwargs):
+                 output_device_index=USBAUDIOID, *args, **kwargs):
         """
         inputs:
             f: filepath of audiofile
@@ -114,9 +117,9 @@ class Song(Thread):
         # print('open stream')
         
         if self.output_device_index is not None:
-            info=self.p.get_device_info_by_index(self.output_device_index)
+            info = self.p.get_device_info_by_index(self.output_device_index)
         else:
-            info=device_sample_rate = self.p.get_default_output_device_info()
+            info = self.p.get_default_output_device_info()
         device_sample_rate = info['defaultSampleRate']
         print('Audio Device Name:',info['name'])
         
