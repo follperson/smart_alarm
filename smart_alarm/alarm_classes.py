@@ -5,12 +5,18 @@ import datetime as dt
 import json
 from math import ceil
 from .code.wakeup import read_aloud as read_weather_quote
-from .code.play import Song
+from .code.play import Song, PyAudio, USBAUDIOID
 from .code.color import ColorProfile, Colors
 from .code.utils import get_repeat_dates, get_db_generic
 from typing import List
 from flask import current_app
 
+
+# DELETE LATER
+p = PyAudio()
+current_app.logger.info('CHOSEN AUDIOID: ' + p.get_device_info_by_index(USBAUDIOID)['name'])
+for i in range(p.get_device_count()):
+    current_app.logger.info(p.get_device_info_by_index(i)['name'])
 
 def get_days_from_now(today: int, day_list: List[int]):
     try:
@@ -65,6 +71,7 @@ class Alarm(Thread):
         local_max = min(self.vol + vol_increase, self.end_vol)
         self.current_song = Song(fp, min_vol=self.vol, max_vol=local_max,
                                  start_sec=start, end_sec=ceil(duration))
+
         self.current_song.play()
 
         snooze_check_window = .25
