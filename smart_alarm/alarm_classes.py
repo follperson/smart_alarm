@@ -12,12 +12,6 @@ from typing import List
 from flask import current_app
 
 
-# DELETE LATER
-p = PyAudio()
-current_app.logger.info('CHOSEN AUDIOID: ' + p.get_device_info_by_index(USBAUDIOID)['name'])
-for i in range(p.get_device_count()):
-    current_app.logger.info(p.get_device_info_by_index(i)['name'])
-
 def get_days_from_now(today: int, day_list: List[int]):
     try:
         next_day = [day for day in day_list if day > today][0]
