@@ -10,7 +10,11 @@ from .code.color import ColorProfile, Colors
 from .code.utils import get_repeat_dates, get_db_generic
 from typing import List
 from flask import current_app
-
+from flask.logging import default_handler
+import logging
+logger = logging.getLogger(__name__)
+logger.addHandler(default_handler)
+logger.setLevel(logging.INFO)
 
 def get_days_from_now(today: int, day_list: List[int]):
     try:
@@ -66,11 +70,13 @@ class Alarm(Thread):
         print(fp, time_left, duration)
         vol_increase = self.vol_change_total * (duration / time_left) # something messed up here with snooze
         local_max = min(self.vol + vol_increase, self.end_vol)
-        self.current_song = Song(fp, min_vol=self.vol, max_vol=local_max,
-                                 start_sec=start, end_sec=ceil(duration))
+        logger.info(f'Starting Song: {fp}')
+        self.current_song = Song(fp, min_vol=self.vol, max_vol=local_max, start_sec=start, end_sec=ceil(duration))
+        logger.info(f'using outpud ID: {self.current_song.output_device_index}')
         if not self.muted:
             self.current_song.play()
-
+        else:
+            logger.info(f'Song is Muted so we are chilling')
         snooze_check_window = .25
         check_periods = ceil(duration / snooze_check_window)
         i = 0
@@ -87,22 +93,19 @@ class Alarm(Thread):
         self.current_song.stop()
         self.current_song = None
 
-        if self.vol != local_max:
-            print('Current Volume is %s, supposed to be %s' % (self.vol, local_max))
         self.vol = min(self.end_vol, local_max)
         return time_left
 
     def play_colors(self):
-        print('loading colors', self.color_profile)
+        logger.info('loading colors', self.color_profile)
         color_info = ColorProfile(**self.color_profile)
-        print('setting color')
+        logger.info('setting color')
         self.colors = Colors(color_info, seconds=self.wake_window)
-        print('set, now playing')
+        logger.info('set, now playing')
         self.colors.play()
-        print('done now')
         
     def _snooze(self):
-        print('le snooze')
+        logger.info('Snoozing')
         self.colors.pause()
         self.current_song.pause()
         while self.snooze_time_left > 0:
@@ -110,7 +113,7 @@ class Alarm(Thread):
             self.snooze_time_left -= 1
             if self.stopped():
                 return
-        print('le snooze is over')
+        logger.info('le snooze is over')
         self.current_song.play()
         self.colors.play()
         self.snoozed = False
@@ -122,7 +125,7 @@ class Alarm(Thread):
         time_left = self.wake_window
         for i in self.playlist.index:
             if self.stopped() or self.skip_songs:
-                print('Ended Alarm Sequence %s Early' % self.alarm_name)
+                logger.info('Ended Alarm Sequence %s Early' % self.alarm_name)
                 break
             time_left = self.play_audio(i, time_left)
 
@@ -130,16 +133,14 @@ class Alarm(Thread):
         if not self.stopped() and not self.muted:
             read_weather_quote()
 
-
     def run_alarm(self):
-        print('Beginning Alarm Sequence for %s' % self.alarm_name)
+        logger.info('Beginning Alarm Sequence for %s' % self.alarm_name)
         self.play_colors()
         self.run_playlist()
         self.run_text_to_voice()
         self.stop()
-        print('Completed Alarm Sequence for %s' % self.alarm_name)
+        logger.info('Completed Alarm Sequence for %s' % self.alarm_name)
 
-        
     def stop(self):
         if self.current_song is not None:
             self.current_song.stop()
@@ -251,7 +252,7 @@ class AlarmWatcher(Thread):
                 try:
                     alarm.start()
                 except RuntimeError as e:
-                    print('error:', e)
+                    logger.info('error:', str(e))
                     # raise MultipleAlarmStartAttempts('Alarm:' + str(alarm.name))
                     continue
 

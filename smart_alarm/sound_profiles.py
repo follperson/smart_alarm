@@ -7,6 +7,7 @@ from .code.exceptions import InvalidInputError
 
 bp = Blueprint('sound', __name__, url_prefix='/sound')
 
+# TODO THERE IS A Bug in computing the wake window
 
 @bp.route('/view', methods=('GET',))
 def view():

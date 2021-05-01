@@ -9,7 +9,6 @@ from .code.exceptions import PlaylistNotFound
 from .code.utils import _get_profiles, get_profile_from_id, get_profile_from_name, get_repeat_dates
 from .db import get_db
 
-
 bp = Blueprint('alarm', __name__, url_prefix='/alarm')
 # todo - add a 'skip this part' to the activate screen so we can skip a song or the google audio stuff
 

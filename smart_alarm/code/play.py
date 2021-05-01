@@ -1,4 +1,4 @@
-from os.path import basename, dirname
+from os.path import basename
 from pydub import AudioSegment
 from pydub.utils import make_chunks
 from pyaudio import PyAudio
@@ -7,7 +7,7 @@ import time
 from math import ceil
 import pandas as pd
 SECOND = 1000
-
+time.sleep(5)
 p = PyAudio()
 try:
     USBAUDIOID = [i for i in range(p.get_device_count()) if 'USB' in p.get_device_info_by_index(i)['name']][0]
@@ -22,7 +22,6 @@ def get_playlist(name):
     return playlist
 
 # todo change the way that the sound rises over time - more at end less at beginning
-# todo make sound fade out into the word time
 
 
 class Song(Thread):
