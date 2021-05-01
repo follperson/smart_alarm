@@ -1,5 +1,3 @@
-##  This code mostly reflects efforts for
-
 from .voice import WakeupSpeaker
 from .quotes import get_weather_nws, get_weather_owm, get_quote
 from .record_audio import SoundRecorderAnalyzer

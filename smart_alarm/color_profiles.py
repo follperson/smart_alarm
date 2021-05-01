@@ -1,13 +1,12 @@
-from flask import (Blueprint, flash, render_template, request, url_for)
-import os
+from flask import (Blueprint, flash, render_template, request, url_for, current_app)
 import json
 from .db import get_db
 import pandas as pd
 
-
 bp = Blueprint('color', __name__, url_prefix='/color')
 
-def process_profile_creation(form):   
+
+def process_profile_creation(form):
     start = form['R_start'], form['G_start'], form['B_start']
     end = form['R_end'], form['G_end'], form['B_end']
     cycle = []

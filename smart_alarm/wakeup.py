@@ -1,5 +1,5 @@
 from flask import current_app, Blueprint, render_template, request, flash
-from .alarm_classes import AlarmWatcher, PyAudio, USBAUDIOID
+from .alarm_classes import AlarmWatcher #, PyAudio, USBAUDIOID
 from .db import get_db
 import pandas as pd
 import datetime as dt
@@ -16,6 +16,10 @@ def get_watcher() -> AlarmWatcher:
     current_app.watcher.check()
     return current_app.watcher
 
+# todo alarm volume min and max
+# todo snooze options
+# todo mute
+# todo turn off light only
 
 @bp.route('/', methods=('GET', 'POST'))
 def view():
@@ -33,28 +37,38 @@ def view():
     if request.method == 'POST':
         print(request.form)
         if 'snooze_generic' in request.form:
-            for alarm in watcher.alarms:
-                if alarm.isAlive():
-                    alarm.snooze()
-                    flash('Snoozed %s' % alarm.name)
+            for alarm_id in watcher.alarms:
+                if watcher.alarms[alarm_id].isAlive():
+                    watcher.alarms[alarm_id].snooze()
+                    flash('Snoozed %s' % watcher.alarms[alarm_id].name)
             else:
                 flash('No Alarms To Snooze')
         else:
             for alarm_id in alarm_dict:
+                alarm = watcher.alarms[alarm_id]
                 if f'snooze_{alarm_id}' in request.form:
-                    alarm = watcher.alarms[alarm_id]
                     alarm.snooze()
                     alarm_dict[alarm_id]['snoozed'] = True
                 if f'io_{alarm_id}' in request.form:
-                    alarm = watcher.alarms[alarm_id]
                     alarm.active = not alarm.active  # switch it!
                     if alarm.isAlive():
-
                         alarm.join(0)
                         alarm.stop()
                     db.execute('UPDATE alarms SET active = ?, modified = ? WHERE id=?',
                                (alarm.active, dt.datetime.now(), alarm_id,))
                     db.commit()
+                if f'mute_{alarm_id}' in request.form:
+                    if not alarm.muted:
+                        alarm.mute()
+                    else:
+                        alarm.unmute()
+                if f'blind_{alarm_id}' in request.form:
+                    if not alarm.blinded:
+                        alarm.blind()
+                    else:
+                        alarm.unblind()
+                if f'skip_{alarm_id}' in request.form:
+                    alarm.skip()
 
     for alarm_id in alarm_dict:
         assert alarm_id in watcher.alarms, 'Alarm ID not in sql'
@@ -64,11 +78,11 @@ def view():
         alarm_dict[alarm_id]['running'] = alarm.isAlive()
         alarm_dict[alarm_id]['snooze_time_left'] = alarm.snooze_time_left
         alarm_dict[alarm_id]['next_alarm_time'] = alarm.next_alarm_time
-
+    any_running = any(alarm_dict[alarm_id]['running'] for alarm_id in alarm_dict)
     # DELETE LATER
-    p = PyAudio()
-    current_app.logger.info('CHOSEN AUDIOID: ' + p.get_device_info_by_index(USBAUDIOID)['name'])
-    for i in range(p.get_device_count()):
-        current_app.logger.info(p.get_device_info_by_index(i)['name'])
+    # p = PyAudio()
+    # current_app.logger.info('CHOSEN AUDIOID: ' + p.get_device_info_by_index(USBAUDIOID)['name'])
+    # for i in range(p.get_device_count()):
+    #     current_app.logger.info(p.get_device_info_by_index(i)['name'])
 
-    return render_template('active/index.html', alarms=alarm_dict)
+    return render_template('active/index.html', alarms=alarm_dict, any_active=any_running)

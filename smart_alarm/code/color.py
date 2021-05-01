@@ -1,20 +1,32 @@
-import board
 import adafruit_dotstar as dotstar
+try:
+    import board
+    dots = dotstar.DotStar(board.SCLK, board.MOSI, 30, brightness=0.9)
+except NotImplementedError:
+
+    class dumbdots:
+        def __init__(self):
+            pass
+
+        def fill(self, x):
+            pass
+
+    dots = dumbdots()
+
 import time
 import numpy as np
 from dataclasses import dataclass
 from threading import Thread, Event
 from typing import Tuple
-import json
-dots = dotstar.DotStar(board.SCLK, board.MOSI, 30, brightness=0.9)
+
 
 @dataclass
 class ColorProfile:
-    cycle : Tuple[Tuple] # ((1,0,0),(2,0,0), (0,1,2))
-    end : Tuple
-    start : Tuple
+    cycle: Tuple[Tuple] # ((1,0,0),(2,0,0), (0,1,2))
+    end: Tuple
+    start: Tuple
 
-    def get_steps(self):
+    def get_steps(self) -> int:
         assert self.end > self.start, 'end cannot be less than start'
         cycle_length = len(self.cycle)
         diff = np.array(self.end) - np.array(self.start)
@@ -38,10 +50,12 @@ class Colors(Thread):
         self.profile = profile
         
         # print('audiosegment set')
-        self.__is_paused = True
+
+        self.is_paused = True
         self.dots = dots
         self.cur_colors = self.profile.start
         self.seconds = seconds
+        self.dummy = not isinstance(dots, dotstar.DotStar)
         Thread.__init__(self, *args, **kwargs)
         
         # Thread functions
@@ -50,10 +64,10 @@ class Colors(Thread):
 
     def pause(self):
         """ pause the updates """ 
-        self.__is_paused = True
+        self.is_paused = True
 
     def play(self):
-        self.__is_paused = False
+        self.is_paused = False
 
     def stop(self):
         """ turn off the puppies """
@@ -88,10 +102,10 @@ class Colors(Thread):
             ix = i % cycle_length
             
             increment = self.profile.cycle[ix]
-            next_step = tuple(self.cur_colors[i] + increment[i] for i in [0,1,2])
+            next_step = tuple(self.cur_colors[i] + increment[i] for i in [0, 1, 2])
             self.cur_colors = next_step
 
-            while self.__is_paused:
+            while self.is_paused:
                 self.turn_off_dots()
                 print('paused')
                 if self.stopped():

@@ -11,54 +11,16 @@ p = PyAudio()
 try:
     USBAUDIOID = [i for i in range(p.get_device_count()) if 'USB' in p.get_device_info_by_index(i)['name']][0]
 except IndexError:
-    USBAUDIOID = 0
+    USBAUDIOID = None
 
 def get_playlist(name):
     df = pd.read_csv('assets\\playlists\\playlists.csv')
     df_songs = pd.read_csv('assets\\playlists\\songs.csv')
     playlist = pd.merge(df.loc[df['name'] == name][['filepath']], df_songs, how='left',on='filepath')
-    # playlist = playlist.sort_values('order')
     return playlist
 
 # todo change the way that the sound rises over time - more at end less at beginning
 # todo make sound fade out into the word time
-
-
-def slow_roll(playlist, time_left):
-    """
-      slowly increase volume of audio in playlist 
-    inputs:
-      playlist: pandas dataframe with length, filepath of each audio file in order. 
-      time_left: time until alarm is supposed to end 
-    """
-    total_secs = playlist['length'].sum()
-    vol = -60
-    vol_change_total = 60
-
-    # go through the playlist and play the audio
-    for fp, duration in playlist[['filepath', 'length']].values:  # add start and end times to the playlist feature (soundprofile= plalist??)
-        print(fp)
-
-        # if the playlist song time is more than the amount of time that we care to wake up,
-        #   then only play the first time_left seconds of playlists 
-        if duration > time_left:
-            duration = time_left
-
-        # if no time left, then do not play anything
-        if ceil(duration) <= 0:
-            break
-
-        # set the intermediate max volume (of current audio file)
-        local_max = vol + (vol_change_total * (duration / total_secs) )
-        
-        # initalize the audio object 
-        song = Song(fp, min_vol=vol, max_vol=local_max, start_sec=0, end_sec=ceil(duration))
-        
-        # play the audio
-        song.play()
-        time.sleep(duration)  # song plays on separate thread
-        time_left = total_secs - ceil(duration)
-        vol = local_max
 
 
 class Song(Thread):
@@ -82,7 +44,7 @@ class Song(Thread):
         # print('audiosegment set')
         # limit audio to be accessed to just the window between start and end seconds
         self.seg = self.seg[start_sec * SECOND:end_sec * SECOND]
-        self.__is_paused = True
+        self.is_paused = True
         self.p = PyAudio()
         self.cur_vol = min_vol
         self.max_vol = max_vol
@@ -98,7 +60,10 @@ class Song(Thread):
 
     def pause(self):
         """ pause the audio """ 
-        self.__is_paused = True
+        self.is_paused = True
+
+    def is_paused(self):
+        return self.is_paused
 
     def stop(self):
         """ end the audio to kill the song """
@@ -110,7 +75,7 @@ class Song(Thread):
         return self._stop_event.is_set()
 
     def play(self):
-        self.__is_paused = False
+        self.is_paused = False
 
     def __get_stream(self):
         """ access the audio handler for playing audio"""
@@ -139,7 +104,7 @@ class Song(Thread):
         increment = abs(self.max_vol - self.cur_vol) / len(chunks)
         print('cur vol:', self.cur_vol, 'chunks ', len(chunks))
         while (chunk_count <= len(chunks) - 1) and not self.stopped():
-            if not self.__is_paused: # write the audio content
+            if not self.is_paused:  # write the audio content
                 cur_chunk = chunks[chunk_count] + self.cur_vol
                 data = cur_chunk._data
                 chunk_count += 1
@@ -152,6 +117,44 @@ class Song(Thread):
         stream.stop_stream()  # end the audio stream
         stream.close()
         # self.p.terminate() # terminating this kills the whole flask app...? 
+
+# demoing
+def slow_roll(playlist, time_left):
+    """
+      slowly increase volume of audio in playlist
+    inputs:
+      playlist: pandas dataframe with length, filepath of each audio file in order.
+      time_left: time until alarm is supposed to end
+    """
+    total_secs = playlist['length'].sum()
+    vol = -60
+    vol_change_total = 60
+
+    # go through the playlist and play the audio
+    for fp, duration in playlist[
+        ['filepath', 'length']].values:  # add start and end times to the playlist feature (soundprofile= plalist??)
+        print(fp)
+
+        # if the playlist song time is more than the amount of time that we care to wake up,
+        #   then only play the first time_left seconds of playlists
+        if duration > time_left:
+            duration = time_left
+
+        # if no time left, then do not play anything
+        if ceil(duration) <= 0:
+            break
+
+        # set the intermediate max volume (of current audio file)
+        local_max = vol + (vol_change_total * (duration / total_secs))
+
+        # initalize the audio object
+        song = Song(fp, min_vol=vol, max_vol=local_max, start_sec=0, end_sec=ceil(duration))
+
+        # play the audio
+        song.play()
+        time.sleep(duration)  # song plays on separate thread
+        time_left = total_secs - ceil(duration)
+        vol = local_max
 
 
 def main():

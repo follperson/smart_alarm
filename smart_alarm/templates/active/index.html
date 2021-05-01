@@ -14,8 +14,10 @@
           <th>Wake Window</th>
           <th>Snooze Time</th>
           <th>Next Alarm Time</th>
-          <th width="30%"> Snooze </th>
           <th width="10%"> Turn on/off</th>
+          {% if any_active %}
+            <th width="40%"> Snooze, etc </th>
+          {% endif %}
         </tr></thead>
       {% for alarm_id in alarms %}
 
@@ -36,13 +38,22 @@
           <td>{{alarms[alarm_id]['wake_window']}}</td>
           <td>{{alarms[alarm_id]['snooze_time']}}</td>
           <td>{{alarms[alarm_id]['next_alarm_time']}}</td>
-          <td>{% if alarms[alarm_id]['snoozed'] %}
+        <td><input width="10%" type="submit" name="io_{{alarm_id}}" value="Turn On/Off"></td>
+        {% if any_active %}
+        <td colspan="6">
+            {% if alarms[alarm_id]['snoozed'] %}
               {{ alarms[alarm_id]['snooze_time_left'] }} seconds left of snooze
-              {% elif alarms[alarm_id]['running'] %}
-            <input width="30%" type="submit" name="snooze_{{alarm_id}}" value="Snooze">
-              {% endif %}</td>
-          <td><input width="10%" type="submit" name="io_{{alarm_id}}" value="Turn On/Off"></td>
-        </tr>
+            {% elif alarms[alarm_id]['running'] %}
+              <input width="50%" style="background-color:red" type="submit" name="snooze_{{alarm_id}}" value="Snooze">
+            {% endif %}
+          {% if alarms[alarm_id]['active'] %}
+            <input style="background-color:lightblue" type="submit" name="mute_{{alarm_id}}" value="ToggleAudio">
+            <input style="background-color:lightgreen" type="submit" name="blind_{{alarm_id}}" value="ToggleColor">
+            <input style="background-color:orange" type="submit" name="skip_{{alarm_id}}" value="SkipSongs">
+          {% endif %}
+        </td>
+        {% endif %}
+      </tr>
       {% endfor %}
       </table>
   <button class="button snooze" type="Submit" name="snooze_generic" value="snooze_generic">Snooze Any Current Alarm</button>

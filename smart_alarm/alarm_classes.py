@@ -5,7 +5,7 @@ import datetime as dt
 import json
 from math import ceil
 from .code.wakeup import read_aloud as read_weather_quote
-from .code.play import Song, PyAudio, USBAUDIOID
+from .code.play import Song
 from .code.color import ColorProfile, Colors
 from .code.utils import get_repeat_dates, get_db_generic
 from typing import List
@@ -27,7 +27,7 @@ def get_days_from_now(today: int, day_list: List[int]):
 
 class Alarm(Thread):
     def __init__(self, id, next_alarm_time, alarm_time, playlist, color_profile, wake_window, name, active,
-                 beg_vol=-30, end_vol=-10, snooze_time=2,  *args, **kwargs):
+                 beg_vol=-50, end_vol=-30, snooze_time=2,  *args, **kwargs):
         self.alarm_id = id
         self.alarm_time = alarm_time
         self.next_alarm_time = next_alarm_time
@@ -43,7 +43,11 @@ class Alarm(Thread):
 
         self.snoozed = False
         self.snooze_time_left = 0
-        
+
+        self.muted = False
+        self.blinded = False
+        self.skip_songs = False
+
         self.current_song = None
         self.colors = None
         
@@ -53,20 +57,19 @@ class Alarm(Thread):
         self._stop_event = Event()
 
     def play_audio(self, index, time_left):
-        fp, start, end, max_duration = self.playlist.loc[
-            index, ['filepath', 'audio_start', 'audio_end', 'duration']]
+        fp, start, end, max_duration = self.playlist.loc[index, ['filepath', 'audio_start', 'audio_end', 'duration']]
         duration = max(end, max_duration)
         if duration > time_left:  # shouldnt happen
             duration = time_left  # but if it does we go with the 'time left' indicator
         if ceil(duration) <= 0:  # also shouldnt happen
             return  # need to be positive duration
         print(fp, time_left, duration)
-        vol_increase = self.vol_change_total * duration / time_left # something messed up here with snooze
+        vol_increase = self.vol_change_total * (duration / time_left) # something messed up here with snooze
         local_max = min(self.vol + vol_increase, self.end_vol)
         self.current_song = Song(fp, min_vol=self.vol, max_vol=local_max,
                                  start_sec=start, end_sec=ceil(duration))
-
-        self.current_song.play()
+        if not self.muted:
+            self.current_song.play()
 
         snooze_check_window = .25
         check_periods = ceil(duration / snooze_check_window)
@@ -75,15 +78,18 @@ class Alarm(Thread):
             time.sleep(snooze_check_window)
             if self.snoozed:
                 self._snooze()
+            if self.skip_songs:
+                break
             i += 1
             time_left = time_left - snooze_check_window
             self.vol += vol_increase / check_periods
 
         self.current_song.stop()
         self.current_song = None
+
         if self.vol != local_max:
             print('Current Volume is %s, supposed to be %s' % (self.vol, local_max))
-
+        self.vol = min(self.end_vol, local_max)
         return time_left
 
     def play_colors(self):
@@ -112,19 +118,27 @@ class Alarm(Thread):
     def run(self):
         self.run_alarm()
 
+    def run_playlist(self):
+        time_left = self.wake_window
+        for i in self.playlist.index:
+            if self.stopped() or self.skip_songs:
+                print('Ended Alarm Sequence %s Early' % self.alarm_name)
+                break
+            time_left = self.play_audio(i, time_left)
+
+    def run_text_to_voice(self):
+        if not self.stopped() and not self.muted:
+            read_weather_quote()
+
+
     def run_alarm(self):
         print('Beginning Alarm Sequence for %s' % self.alarm_name)
         self.play_colors()
-        time_left = self.wake_window
-        for i in self.playlist.index:
-            time_left = self.play_audio(i, time_left)
-            if self.stopped():
-                print('Ended Alarm Sequence %s Early' % self.alarm_name)
-                break
-        if not self.stopped():
-            read_weather_quote()
-        print('Completed Alarm Sequence for %s' % self.alarm_name)
+        self.run_playlist()
+        self.run_text_to_voice()
         self.stop()
+        print('Completed Alarm Sequence for %s' % self.alarm_name)
+
         
     def stop(self):
         if self.current_song is not None:
@@ -140,6 +154,35 @@ class Alarm(Thread):
         self.snoozed = True
         self.snooze_time_left = self.snooze_min * 60
 
+    def mute(self):
+        print('muting')
+        if isinstance(self.current_song, Song):
+            self.current_song.pause()
+            self.muted = True
+
+    def unmute(self):
+        print('unmuting')
+        if isinstance(self.current_song, Song):
+            if self.current_song.is_paused:
+                self.current_song.play()
+            self.muted = False
+
+    def blind(self):
+        print('blinding')
+        if isinstance(self.colors, Colors):
+            self.colors.pause()
+            self.blinded = True
+
+    def unblind(self):
+        print('blinding')
+        if isinstance(self.colors, Colors):
+            if self.colors.is_paused:
+                self.colors.play()
+            self.blinded = False
+
+    def skip(self):
+        print('skipping songs')
+        self.skip_songs = True
 
 def get_time_til_wake(next_alarm_datetime):
     time_til_wake = next_alarm_datetime - dt.datetime.now()
@@ -158,15 +201,14 @@ def get_next_alarm_time(alarm_time, repeat_days):
     else:
         days_from_now = get_days_from_now(today, repeat_days)
     next_alarm_datetime = dt.datetime.combine(now.date() +
-                                                   dt.timedelta(days=days_from_now),
-                                                   dt.time(alarm_hour, alarm_min))
+                                              dt.timedelta(days=days_from_now),
+                                              dt.time(alarm_hour, alarm_min))
     return next_alarm_datetime
-
 
 
 class AlarmWatcher(Thread):
     def __init__(self):
-        self.alarms = dict()
+        self.alarms = dict()  # {id: object}
         self.closed = False
         self.db_params = current_app.config['DATABASE']
         Thread.__init__(self)
@@ -188,7 +230,7 @@ class AlarmWatcher(Thread):
         if df_alarms.empty:
             return
         df_alarms.loc[:, 'dow'] = df_alarms.apply(lambda x: get_repeat_dates(x, False), axis=1)
-        alarm_ids =list(self.alarms.keys())
+        alarm_ids = list(self.alarms.keys())
         for alarm_id in alarm_ids:
             if self.alarms[alarm_id].stopped():
                 print('pop', alarm_id)
