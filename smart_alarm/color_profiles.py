@@ -42,6 +42,7 @@ def create():
         flash(error)
     return render_template('sound_color/create_profile.html', name='Color ')
 
+
 @bp.route('/<int:id>/update', methods=('GET', 'POST'))
 def update(id):
     if request.method == 'POST':
@@ -60,7 +61,7 @@ def update(id):
             db.execute('INSERT INTO color_profiles (name, profile) VALUES (?,?)', (profile_name, json.dumps(profile)))
             db.commit()
             return render_template('alarms/success.html', params={'name': profile_name, 'action': 'update color profile',
-                                                                 'return': url_for('color.create')})
+                                                                  'return': url_for('color.create')})
         flash(error)
     return render_template('sound_color/create_profile.html', name='Update Color ')
 

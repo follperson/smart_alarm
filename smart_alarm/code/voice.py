@@ -8,7 +8,12 @@ from google.cloud import texttospeech as tts
 from .config import api_key_google_path
 from .play import USBAUDIOID
 os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = api_key_google_path
-SAMPLE_RATE = 24000
+
+p = pyaudio.PyAudio()
+if USBAUDIOID is not None:
+    SAMPLE_RATE = int(p.get_device_info_by_index(USBAUDIOID)['defaultSampleRate'])
+else:
+    SAMPLE_RATE = int(p.get_default_output_device_info()['defaultSampleRate'])
 
 
 class WakeupSpeaker:
@@ -21,7 +26,7 @@ class WakeupSpeaker:
         self.client = tts.TextToSpeechClient()
         self.voice = None
         self.samp_rate = None
-        self.audio_config = tts.AudioConfig(audio_encoding=tts.AudioEncoding.LINEAR16,sample_rate_hertz=SAMPLE_RATE)
+        self.audio_config = tts.AudioConfig(audio_encoding=tts.AudioEncoding.LINEAR16, sample_rate_hertz=SAMPLE_RATE)
 
         self.pa = pyaudio.PyAudio()
         self.output_device_index = self.pa.get_default_output_device_info()['index'] if output_id is None else output_id
@@ -36,7 +41,7 @@ class WakeupSpeaker:
         # device_sample_rate = int(device_sample_rate)
         # sample_rate = max(device_sample_rate, sample_rate)
         # print(f'device sample rate: {device_sample_rate}, audioo sample rate: {sample_rate}, using bigger one')
-        self.play_stream = self.pa.open(format=audio_format, channels=channels, rate=24000, output=True,
+        self.play_stream = self.pa.open(format=audio_format, channels=channels, rate=SAMPLE_RATE, output=True,
                                         output_device_index=self.output_device_index)
 
     def initialize(self):

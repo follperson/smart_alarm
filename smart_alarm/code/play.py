@@ -7,11 +7,13 @@ import time
 from math import ceil
 import pandas as pd
 SECOND = 1000
+
 p = PyAudio()
 try:
     USBAUDIOID = [i for i in range(p.get_device_count()) if 'USB' in p.get_device_info_by_index(i)['name']][0]
 except IndexError:
     USBAUDIOID = None
+
 
 def get_playlist(name):
     df = pd.read_csv('assets\\playlists\\playlists.csv')

@@ -79,10 +79,5 @@ def view():
         alarm_dict[alarm_id]['snooze_time_left'] = alarm.snooze_time_left
         alarm_dict[alarm_id]['next_alarm_time'] = alarm.next_alarm_time
     any_running = any(alarm_dict[alarm_id]['running'] for alarm_id in alarm_dict)
-    # DELETE LATER
-    # p = PyAudio()
-    # current_app.logger.info('CHOSEN AUDIOID: ' + p.get_device_info_by_index(USBAUDIOID)['name'])
-    # for i in range(p.get_device_count()):
-    #     current_app.logger.info(p.get_device_info_by_index(i)['name'])
 
     return render_template('active/index.html', alarms=alarm_dict, any_active=any_running)

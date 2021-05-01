@@ -46,7 +46,7 @@
             {% elif alarms[alarm_id]['running'] %}
               <input width="50%" style="background-color:red" type="submit" name="snooze_{{alarm_id}}" value="Snooze">
             {% endif %}
-          {% if alarms[alarm_id]['active'] %}
+          {% if alarms[alarm_id]['running'] %}
             <input style="background-color:lightblue" type="submit" name="mute_{{alarm_id}}" value="ToggleAudio">
             <input style="background-color:lightgreen" type="submit" name="blind_{{alarm_id}}" value="ToggleColor">
             <input style="background-color:orange" type="submit" name="skip_{{alarm_id}}" value="SkipSongs">
