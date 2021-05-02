@@ -1,16 +1,21 @@
 from flask import current_app, Blueprint, render_template, request, flash
+from flask.logging import default_handler
 from .alarm_classes import AlarmWatcher #, PyAudio, USBAUDIOID
 from .db import get_db
 import pandas as pd
 import datetime as dt
+import logging
 bp = Blueprint('wakeup', __name__, url_prefix='/')
+logger = logging.getLogger(__name__)
+logger.addHandler(default_handler)
+logger.setLevel(logging.INFO)
 
 
 def get_watcher() -> AlarmWatcher:
     try:
         current_app.watcher
     except AttributeError as ok:
-        print('new watcher')
+        logger.info('new watcher')
         watcher = AlarmWatcher()
         current_app.watcher = watcher
     current_app.watcher.check()

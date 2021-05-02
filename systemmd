@@ -9,9 +9,9 @@ Environment="PATH=/home/pi/.conda/envs/SmartAlarm/bin:/usr/bin FLASK_APP=smart_a
 Environment=FLASK_APP=smart_alarm
 Environment=FLASK_ENV=development
 Environment=CONDA_ENV_PATH=/home/pi/.conda/envs/SmartAlarm
+Environment=FLASK_RUN_RELOAD=False
 Environment=PATH=/home/pi/.conda/envs/SmartAlarm/bin:/usr/bin
-ExecStart=/home/pi/.conda/envs/SmartAlarm/bin/flask run --host=0.0.0.0
-
+ExecStart=/home/pi/.conda/envs/SmartAlarm/bin/flask run --host=0.0.0.0 --port=8081
 
 [Install]
 WantedBy=multi-user.target

@@ -37,8 +37,11 @@ def create_app(test_config=None):
     from . import wakeup
     app.register_blueprint(wakeup.bp)
 
+    with app.app_context():
+        wakeup.get_watcher()
+
     return app
 
 
-if __name__ == '__main__':
-    create_app()
+# if __name__ == '__main__':
+#     create_app()

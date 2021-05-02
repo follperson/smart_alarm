@@ -20,3 +20,17 @@ needs website structure fleshed out
 must install and make available to path:
 https://avbin.github.io/AVbin/Download.html
 https://www.ffmpeg.org/
+
+
+
+make systemd file, name it smartalarm.service
+
+copy to /etc/systemd/system/smartalarm.service
+
+reset the daemons with sudo systemctl daemon-reload
+start it with sudo systemctl
+
+sudo systemctl enable smartalarm
+
+review logs with systemctl status smartalarm.service -n 200
+or like journalctl smartalarm.service
