@@ -29,7 +29,7 @@ def record_ready_slowroll(num_hours=1, to_record=False, name=SoundRecorderAnalyz
     sound_recorder = SoundRecorderAnalyzer(name, record_secs=record_period, sleep_period=sleep_period, to_record=to_record)
     sound_recorder.record_hours()
 
-    example_song = r"C:\Users\follm\Downloads\torrents\audio\Brian Eno - Ambient 1 Music for Airports Electronic\Brian Eno - Ambient 1 Music for Airports [FLAC-Lossless]\01 Brian Eno - 1-1.flac"
+    example_song = 'test.mp3'
     try:
         song = Song(example_song)
         song.play()

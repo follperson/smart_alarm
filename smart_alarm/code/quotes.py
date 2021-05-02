@@ -28,7 +28,7 @@ def get_weather_nws(location = 'MapClick.php?textField1=38.96&textField2=-77.03'
         print('Cannot find today info on NWS website')
         raise FileNotFoundError
     long_text = today.find_next('div').text
-    long_text = 'Good Morning Alex and andy! Stay tuned for today\'s forecast, which is:. ' + long_text
+    long_text = 'Good Morning! ' + long_text
     return long_text
 
 
@@ -88,13 +88,13 @@ def parse_owm(info):
     else: # only report heat_index if it is hot
         report_temp = heat_index
 
-    resp.append('The temperature outside now is %s degrees.' % str(int(report_temp)))
+    resp.append('The current weather is %s.' % ', or '.join(weather_desc))
+    resp.append('The outdoor temperature is %s degrees.' % str(int(report_temp)))
     resp.append('Cloud cover is at %s percent.' % str(clouds))
-    resp.append('The weather outside could be called %s.' % ', or '.join(weather_desc))
     return '\n'.join(resp)
 
-def get_weather_owm():
-    resp = get('https://api.openweathermap.org/data/2.5/weather?zip=20011,us&APPID=%s' % api_key_weather)
+def get_weather_owm(zipcode='20011'):
+    resp = get('https://api.openweathermap.org/data/2.5/weather?zip=%s,us&APPID=%s' % (zipcode, api_key_weather))
     info = resp.json()
     text = parse_owm(info)
     return text

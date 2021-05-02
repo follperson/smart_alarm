@@ -10,12 +10,6 @@ audio raise and alarm basics function. Light non-functioning. Audio recording fu
  
 current version is 0.1.0
 
-needs light functionality added fully
-needs music functionality
-needs website structure fleshed out
-- view -> CRUD on profiles
-- view -> CRUD on alarms
-- view current alarm
 
 must install and make available to path:
 https://avbin.github.io/AVbin/Download.html
