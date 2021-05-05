@@ -133,9 +133,17 @@ class Alarm(Thread):
     def run_text_to_voice(self):
         ws = WakeupSpeaker(volume_gain=self.end_vol)
         ws.initialize()
-        for text in [get_weather_nws(), get_weather_owm(), get_quote()]:
-            if not self.stopped() and not self.muted:
-                ws.read_aloud(text)
+        try:
+            weather_nws = get_weather_nws()
+            weather_owm = get_weather_owm()
+            quote = get_quote()
+        except Exception as e:
+            logger.info('Error getting info')
+            logger.info(str(e))
+        else:
+            for text in [weather_nws, weather_owm, quote]:
+                if not self.stopped() and not self.muted:
+                    ws.read_aloud(text)
 
     def run_alarm(self):
         logger.info('Beginning Alarm Sequence for %s' % self.alarm_name)
