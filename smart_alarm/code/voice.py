@@ -27,7 +27,7 @@ class WakeupSpeaker:
         self.voice = None
         self.audio_config = tts.AudioConfig(audio_encoding=tts.AudioEncoding.LINEAR16,
                                             sample_rate_hertz=SAMPLE_RATE,
-                                            volumeGainDb=volume_gain)
+                                            volume_gain_db=volume_gain)
 
         self.pa = pyaudio.PyAudio()
         self.output_device_index = self.pa.get_default_output_device_info()['index'] if output_id is None else output_id
