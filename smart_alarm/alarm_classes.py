@@ -4,7 +4,7 @@ import time
 import datetime as dt
 import json
 from math import ceil
-from .code.wakeup import read_aloud as read_weather_quote
+from .code.wakeup import WakeupSpeaker, get_weather_nws, get_weather_owm, get_quote
 from .code.play import Song
 from .code.color import ColorProfile, Colors
 from .code.utils import get_repeat_dates, get_db_generic
@@ -15,6 +15,7 @@ import logging
 logger = logging.getLogger(__name__)
 logger.addHandler(default_handler)
 logger.setLevel(logging.INFO)
+
 
 def get_days_from_now(today: int, day_list: List[int]):
     try:
@@ -130,8 +131,11 @@ class Alarm(Thread):
             time_left = self.play_audio(i, time_left)
 
     def run_text_to_voice(self):
-        if not self.stopped() and not self.muted:
-            read_weather_quote()
+        ws = WakeupSpeaker(volume_gain=self.end_vol)
+        ws.initialize()
+        for text in [get_weather_nws(), get_weather_owm(), get_quote()]:
+            if not self.stopped() and not self.muted:
+                ws.read_aloud(text)
 
     def run_alarm(self):
         logger.info('Beginning Alarm Sequence for %s' % self.alarm_name)

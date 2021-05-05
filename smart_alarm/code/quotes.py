@@ -15,7 +15,7 @@ def get_forecast_entry(table):
             return i
 
 
-def get_weather_nws(location = 'MapClick.php?textField1=38.96&textField2=-77.03'): # todo make it more flexible with location?
+def get_weather_nws(location='MapClick.php?textField1=38.96&textField2=-77.03'): # todo make it more flexible with location?
     """
       get weather data from the National Weather Services, parsing using Beatuiful Soup
     """
@@ -28,7 +28,7 @@ def get_weather_nws(location = 'MapClick.php?textField1=38.96&textField2=-77.03'
         print('Cannot find today info on NWS website')
         raise FileNotFoundError
     long_text = today.find_next('div').text
-    long_text = 'Good Morning! ' + long_text
+    long_text = 'Good Morning! ... ' + long_text
     return long_text
 
 
@@ -85,11 +85,11 @@ def parse_owm(info):
             report_temp = temp
         else:
             report_temp = wind_chill
-    else: # only report heat_index if it is hot
+    else:  # only report heat_index if it is hot
         report_temp = heat_index
 
     resp.append('The current weather is %s.' % ', or '.join(weather_desc))
-    resp.append('The outdoor temperature is %s degrees.' % str(int(report_temp)))
+    resp.append('The temperature is %s degrees.' % str(int(report_temp)))
     resp.append('Cloud cover is at %s percent.' % str(clouds))
     return '\n'.join(resp)
 

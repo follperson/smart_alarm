@@ -22,11 +22,12 @@ class WakeupSpeaker:
         BritishSnob = ['en-GB-Wavenet-D', SAMPLE_RATE]
         NiceBritishLady = ['en-GB-Wavenet-C', SAMPLE_RATE]
 
-    def __init__(self, output_id=USBAUDIOID):
+    def __init__(self, output_id=USBAUDIOID, volume_gain=0):
         self.client = tts.TextToSpeechClient()
         self.voice = None
-        self.samp_rate = None
-        self.audio_config = tts.AudioConfig(audio_encoding=tts.AudioEncoding.LINEAR16, sample_rate_hertz=SAMPLE_RATE)
+        self.audio_config = tts.AudioConfig(audio_encoding=tts.AudioEncoding.LINEAR16,
+                                            sample_rate_hertz=SAMPLE_RATE,
+                                            volumeGainDb=volume_gain)
 
         self.pa = pyaudio.PyAudio()
         self.output_device_index = self.pa.get_default_output_device_info()['index'] if output_id is None else output_id

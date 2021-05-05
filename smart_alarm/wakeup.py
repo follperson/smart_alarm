@@ -21,10 +21,14 @@ def get_watcher() -> AlarmWatcher:
     current_app.watcher.check()
     return current_app.watcher
 
+# todo give wake_window to the 'playlist' class?
+#  and then calculate it on the fly for the alarm with a join
+
+# todo prefill the current values when doing 'update'
+
 # todo alarm volume min and max
-# todo snooze options
-# todo mute
-# todo turn off light only
+# todo change volume on the fly???
+# todo snoozetime variability
 
 @bp.route('/', methods=('GET', 'POST'))
 def view():
