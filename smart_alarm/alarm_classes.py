@@ -32,7 +32,7 @@ def get_days_from_now(today: int, day_list: List[int]):
 
 class Alarm(Thread):
     def __init__(self, id, next_alarm_time, alarm_time, playlist, color_profile, wake_window, name, active,
-                 beg_vol=-40, end_vol=-20, snooze_time=2,  *args, **kwargs):
+                 beg_vol=-40, end_vol=-12, snooze_time=2,  *args, **kwargs):
         self.alarm_id = id
         self.alarm_time = alarm_time
         self.next_alarm_time = next_alarm_time
