@@ -48,7 +48,7 @@ def create():
             db.execute('INSERT INTO playlists (name) VALUES (?)', (name,))
             db.commit()
             db = get_db()
-            playlist_id = get_profile_from_name(db, name, 'playlists')['id']
+            playlist_id = get_profile_from_name(db, name, 'playlists')
             return redirect(url_for('.update', id=playlist_id))
         flash(error)
     return render_template('sound_color/create_playlist.html')
@@ -126,7 +126,7 @@ def update(id):
                 text = 'INSERT INTO playlist (%s) VALUES (%s ?, ?)' % (
                         ', '.join(fields + ['audio_id', 'playlist_id']), '?, ' * (len(fields)))
                 db.execute(text, update_input)
-            print('total',wake_window)
+            print('total', wake_window)
 
             db.execute('UPDATE playlists set wake_window = ? where id = ?;', (wake_window, id))
             db.commit()

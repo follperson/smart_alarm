@@ -12,7 +12,6 @@ CREATE TABLE alarms (
   modified TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   name TEXT NOT NULL,
   alarm_time TIME NOT NULL,
-  wake_window INTEGER not null,
   active BOOLEAN NOT NULL DEFAULT FALSE,
   repeat_monday BOOLEAN NOT NULL DEFAULT FALSE,
   repeat_tuesday BOOLEAN NOT NULL DEFAULT FALSE,
@@ -47,7 +46,7 @@ CREATE TABLE audio (
 CREATE TABLE playlists (
   id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
   name TEXT NOT NULL,
-  wake_window INTEGER
+  wake_window INTEGER Not Null
 );
 
 CREATE TABLE playlist (

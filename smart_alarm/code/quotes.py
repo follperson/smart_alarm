@@ -28,7 +28,7 @@ def get_weather_nws(location='MapClick.php?textField1=38.96&textField2=-77.03'):
         print('Cannot find today info on NWS website')
         raise FileNotFoundError
     long_text = today.find_next('div').text
-    long_text = 'Good Morning! ... ' + long_text
+    long_text = 'Good Morning! ' + long_text
     return long_text
 
 

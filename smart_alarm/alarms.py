@@ -1,16 +1,14 @@
-from flask import (
-    Blueprint, flash, render_template, request, url_for
-)
+from flask import Blueprint, flash, render_template, request, url_for
 from sqlite3 import IntegrityError
 import pandas as pd
 import calendar
 import datetime as dt
 from .code.exceptions import PlaylistNotFound
-from .code.utils import _get_profiles, get_profile_from_id, get_profile_from_name, get_repeat_dates
+from .code.utils import _get_profiles, get_profile_from_id, get_profile_from_name, get_repeat_dates_string
 from .db import get_db
 
 bp = Blueprint('alarm', __name__, url_prefix='/alarm')
-# todo - add a 'skip this part' to the activate screen so we can skip a song or the google audio stuff
+# todo playlist time is not changing when you edit it
 
 @bp.route('/create', methods=('GET', 'POST'))
 def create():
@@ -39,8 +37,8 @@ def create():
         days = [day for day in range(7) if calendar.day_name[day] in request.form] # all days that are checked
 
         # get the id that corresponds to the named playlist / profiles
-        sound_profile_id = db.execute('SELECT id FROM playlists WHERE name = ?', (sound_profile,)).fetchone()
-        color_profile_id = db.execute('SELECT id FROM color_profiles WHERE name = ?', (color_profile,)).fetchone()
+        sound_profile_id = get_profile_from_name(db, sound_profile, 'playlists')
+        color_profile_id = get_profile_from_name(db, color_profile, 'color_profiles')
 
         # check for any errors in the text boxes
         error = []
@@ -55,16 +53,12 @@ def create():
         
         # update the database with the new alarm information
         if not error:
-            wake_window = db.execute("SELECT wake_window FROM playlists WHERE id = ?;", (sound_profile_id['id'],)
-                                         ).fetchone()['wake_window']
-            print(wake_window)
             try:
                 db.execute(
-                    'INSERT INTO alarms (name, modified, alarm_time, active, wake_window, '
-                    'sound_profile, color_profile, repeat_monday, '
-                    'repeat_tuesday, repeat_wednesday, repeat_thursday, repeat_friday, repeat_saturday, repeat_sunday) '
-                    'VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
-                    (name, dt.datetime.now(), time, active, wake_window, sound_profile_id['id'], color_profile_id['id'],
+                    """INSERT INTO alarms (name, modified, alarm_time, active, sound_profile, color_profile, 
+                    repeat_monday, repeat_tuesday, repeat_wednesday, repeat_thursday, repeat_friday, repeat_saturday, 
+                    repeat_sunday) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                    (name, dt.datetime.now(), time, active, sound_profile_id, color_profile_id,
                      0 in days, 1 in days, 2 in days, 3 in days, 4 in days, 5 in days, 6 in days,)
                 )
                 db.commit()
@@ -72,8 +66,9 @@ def create():
                 error = 'Integrity Error: ' + str(e)
             # return the success page
             else:
-                return render_template('alarms/success.html',
-                                   params={'name': name, 'action':'create alarm', 'return': url_for('alarm.create')})
+                return render_template(
+                    'alarms/success.html',
+                    params={'name': name, 'action':'create alarm', 'return': url_for('alarm.create')})
         
         # there was an error, so flash the errors
         flash('. '.join(error))
@@ -98,7 +93,8 @@ def update(id):
 
     # get alarm's current information, and place them in python variables
     alarm = db.execute(
-        'SELECT name, alarm_time, active, sound_profile, color_profile, repeat_monday, repeat_tuesday, repeat_wednesday, repeat_thursday, repeat_friday, repeat_saturday, repeat_sunday FROM alarms WHERE id = ?',
+        '''SELECT name, alarm_time, active, sound_profile, color_profile, repeat_monday, repeat_tuesday, 
+        repeat_wednesday, repeat_thursday, repeat_friday, repeat_saturday, repeat_sunday FROM alarms WHERE id = ?''',
         (id,)).fetchone()
     
     name = alarm['name']
@@ -108,14 +104,8 @@ def update(id):
     active = alarm['active']
     
     error = []
-    try:
-        sound_profile = get_profile_from_id(db, alarm['sound_profile'], 'playlists')
-    except AssertionError as known:
-        error.append(str(known))
-    try:
-        color_profile = get_profile_from_id(db, alarm['color_profile'],'color_profiles')
-    except AssertionError as known:
-        error.append(str(known))
+    sound_profile = get_profile_from_id(db, alarm['sound_profile'], 'playlists')
+    color_profile = get_profile_from_id(db, alarm['color_profile'], 'color_profiles')
     use = 'update'
 
     if request.method == 'POST':
@@ -129,28 +119,28 @@ def update(id):
         days = [day for day in range(7) if calendar.day_name[day] in request.form]
         
         # check for errors
-        if len(days) == 0:
-            error.append("Please select a day for this alarm")
         try:
+            if len(days) == 0:
+                raise ZeroDivisionError
             sound_profile_id = get_profile_from_name(db, sound_profile, 'playlists')
-        except PlaylistNotFound as known:
-            error.append(str(known))
-        try:
             color_profile_id = get_profile_from_name(db, color_profile, 'color_profiles')
         except PlaylistNotFound as known:
             error.append(str(known))
-        
+        except ZeroDivisionError:
+            error.append("Please select a day for this alarm")
+        else:
         # update database with the information in the form
-        if not error:
             db.execute(
-                'UPDATE alarms SET name = ?, alarm_time = ?, active = ?, sound_profile = ?, color_profile = ?, repeat_monday = ?, repeat_tuesday = ?, repeat_wednesday = ?, repeat_thursday = ?, repeat_friday = ?, repeat_saturday = ?, repeat_sunday = ?, modified = ? WHERE id = ?',
-                (name, time, active, sound_profile_id['id'], color_profile_id['id'], 0 in days, 1 in days, 2 in days, 3 in days, 4 in days,
+                """UPDATE alarms SET name = ?, alarm_time = ?, active = ?, sound_profile = ?, color_profile = ?, 
+                repeat_monday = ?, repeat_tuesday = ?, repeat_wednesday = ?, repeat_thursday = ?, repeat_friday = ?, 
+                repeat_saturday = ?, repeat_sunday = ?, modified = ? WHERE id = ?""",
+                (name, time, active, sound_profile_id, color_profile_id, 0 in days, 1 in days, 2 in days, 3 in days, 4 in days,
                  5 in days, 6 in days, dt.datetime.now(), id,))
             db.commit()
 
             # return the success page
             return render_template('alarms/success.html', params={'name': name, 'action': 'update alarm',
-                                                                   'return': url_for('alarm.update', id=id)})
+                                                                  'return': url_for('alarm.update', id=id)})
 
     flash('\n'.join(error))
     return render_template('alarms/create_alarm.html', use=use, name=name, time=time, days=days,
@@ -169,7 +159,7 @@ def view():
 
     # if we have alarms in database, display them
     if not df.empty:
-        df['repeat_dates'] = df.apply(get_repeat_dates, axis=1) # change int day to str days
+        df['repeat_dates'] = df.apply(get_repeat_dates_string, axis=1) # change int day to str days
         df['active'] = df['active'].astype(bool) 
         
         # Get names from color/sound profiles, not just id numbers
@@ -183,3 +173,4 @@ def view():
     
     # return available alarms
     return render_template('alarms/view_alarms.html', df=df[cols])
+

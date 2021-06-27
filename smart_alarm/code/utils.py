@@ -31,7 +31,10 @@ def get_profile_from_id(db, val, table):
       val: id
       table: table to be queried
     """
-    return _get_profile('name', 'id', val, table, db)
+    try:
+        return _get_profile('name', 'id', val, table, db)['name']
+    except KeyError:
+        return None
 
 
 def get_profile_from_name(db, val, table):
@@ -42,11 +45,14 @@ def get_profile_from_name(db, val, table):
       val: name
       table: table to be queried
     """
-    return _get_profile('id', 'name', val, table, db)
+    try:
+        return _get_profile('id', 'name', val, table, db)['id']
+    except KeyError:
+        return None
 
 
 def _get_profile(field_want, field_have, value, table, db):
-    val = db.execute('SELECT %s FROM %s WHERE %s=?' % (field_want, table, field_have) , (value,)).fetchone()
+    val = db.execute('SELECT %s FROM %s WHERE %s=?' % (field_want, table, field_have), (value,)).fetchone()
     if val is None:
         raise PlaylistNotFound('{} {} is not defined in {}'.format(field_want, value, table))
     return val
@@ -61,8 +67,9 @@ def _get_profiles(fields_want, table, db):
     return val
 
 
-def get_repeat_dates(x, string=True):
-    if string:
-        return ', '.join([day_name[i] for i in range(7) if x['repeat_' + day_name[i].lower()]])
-    else:
-        return [i for i in range(7) if x['repeat_' + day_name[i].lower()]]
+def get_repeat_dates_string(x):
+    return ', '.join([day_name[i] for i in range(7) if x['repeat_' + day_name[i].lower()]])
+
+
+def get_repeat_dates_list(x):
+    return [i for i in range(7) if x['repeat_' + day_name[i].lower()]]

@@ -7,7 +7,7 @@ from math import ceil
 from .code.wakeup import WakeupSpeaker, get_weather_nws, get_weather_owm, get_quote
 from .code.play import Song
 from .code.color import ColorProfile, Colors
-from .code.utils import get_repeat_dates, get_db_generic
+from .code.utils import get_repeat_dates_list, get_db_generic
 from typing import List
 from flask import current_app
 from flask.logging import default_handler
@@ -15,7 +15,7 @@ import logging
 logger = logging.getLogger(__name__)
 logger.addHandler(default_handler)
 logger.setLevel(logging.INFO)
-
+# todo make wake_window consistent just pulled
 
 def get_days_from_now(today: int, day_list: List[int]):
     try:
@@ -235,14 +235,17 @@ class AlarmWatcher(Thread):
     def check(self):
         db = get_db_generic(self.db_params)
         # Look at the to find what we expect from the web app
-        df_alarms = pd.read_sql("""SELECT * FROM alarms inner join 
+        df_alarms = pd.read_sql("""SELECT * FROM alarms inner join
                                          (select id cid, profile cprofile from color_profiles) colors
-                                   on alarms.color_profile=colors.cid""", con=db).set_index('id')
+                                        on alarms.color_profile=colors.cid
+                                        inner join
+                                         (select id pid, wake_window from playlists) playlists
+                                   on alarms.sound_profile=playlists.pid""", con=db).set_index('id')
 
         df_alarms['color_profile'] = df_alarms['cprofile'].apply(json.loads)
         if df_alarms.empty:
             return
-        df_alarms.loc[:, 'dow'] = df_alarms.apply(lambda x: get_repeat_dates(x, False), axis=1)
+        df_alarms.loc[:, 'dow'] = df_alarms.apply(lambda x: get_repeat_dates_list(x), axis=1)
         alarm_ids = list(self.alarms.keys())
         for alarm_id in alarm_ids:
             if self.alarms[alarm_id].stopped():
@@ -278,6 +281,7 @@ class AlarmWatcher(Thread):
 
 
 def get_alarm(df_alarms, alarm_id, db):
+    print(df_alarms.loc[alarm_id,['dow', 'alarm_time', 'wake_window', 'active', 'sound_profile', 'name', 'color_profile']])
     dow, alarm_time, wake_window, active, playlist_id, name, color_profile = df_alarms.loc[
         alarm_id, ['dow', 'alarm_time', 'wake_window', 'active', 'sound_profile', 'name', 'color_profile']]
     

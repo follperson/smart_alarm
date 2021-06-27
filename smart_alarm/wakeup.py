@@ -21,9 +21,6 @@ def get_watcher() -> AlarmWatcher:
     current_app.watcher.check()
     return current_app.watcher
 
-# todo give wake_window to the 'playlist' class?
-#  and then calculate it on the fly for the alarm with a join
-
 # todo prefill the current values when doing 'update'
 
 # todo alarm volume min and max
@@ -38,7 +35,7 @@ def view():
     """
     db = get_db()
     df_alarms = pd.read_sql('select *, 2 snooze_time from ALARMS inner join '
-                            '(select id sound_profile, name playlist_name from playlists) p '
+                            '(select id sound_profile, name playlist_name, wake_window from playlists) p '
                             'on p.sound_profile=ALARMS.sound_profile;', con=db)
     watcher = get_watcher()
     alarm_dict = df_alarms.set_index('id').to_dict('index')

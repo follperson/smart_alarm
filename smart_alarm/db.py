@@ -26,7 +26,6 @@ def close_db(e=None):
 def init_db():
     db = get_db()
     import sys
-    import os
     root = DIRECTORY_ROOT
     sys.path.append(root)
     from .code import music_metadata

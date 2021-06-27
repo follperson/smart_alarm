@@ -5,8 +5,12 @@ from numpy.random import randint
 import os
 import pyaudio
 from google.cloud import texttospeech as tts
-from .config import api_key_google_path
-from .play import USBAUDIOID
+try:
+    from .config import api_key_google_path
+    from .play import USBAUDIOID
+except ModuleNotFoundError:
+    from smart_alarm.code.config import api_key_google_path
+    from smart_alarm.code.play import USBAUDIOID
 os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = api_key_google_path
 
 p = pyaudio.PyAudio()
@@ -27,7 +31,7 @@ class WakeupSpeaker:
         self.voice = None
         self.audio_config = tts.AudioConfig(audio_encoding=tts.AudioEncoding.LINEAR16,
                                             sample_rate_hertz=SAMPLE_RATE,
-                                            volume_gain_db=volume_gain)
+                                            volume_gain_db=10+volume_gain)
 
         self.pa = pyaudio.PyAudio()
         self.output_device_index = self.pa.get_default_output_device_info()['index'] if output_id is None else output_id
@@ -37,11 +41,7 @@ class WakeupSpeaker:
         channels = 1
         audio_format = pyaudio.paInt16
         info = self.pa.get_device_info_by_index(self.output_device_index)
-        # device_sample_rate = info['defaultSampleRate']
         print('Audio Device Name:', info['name'])
-        # device_sample_rate = int(device_sample_rate)
-        # sample_rate = max(device_sample_rate, sample_rate)
-        # print(f'device sample rate: {device_sample_rate}, audioo sample rate: {sample_rate}, using bigger one')
         self.play_stream = self.pa.open(format=audio_format, channels=channels, rate=SAMPLE_RATE, output=True,
                                         output_device_index=self.output_device_index)
 
@@ -92,6 +92,6 @@ def randomly_select_from_list(choices, neg_filter='ignore', pos_filter='-'):
 
 
 if __name__ == '__main__':
-    speaker = WakeupSpeaker()
+    speaker = WakeupSpeaker(volume_gain=-2)
     speaker.initialize()
-    speaker.read_aloud('The Dog is very small')
+    speaker.read_aloud('Call me, maybe! I want to dance with somebody - somebody who loves me')
