@@ -1,5 +1,5 @@
 import sqlite3
-from .code.config import MAXFILESIZE, DIRECTORY_ROOT
+from .src.config import MAXFILESIZE, DIRECTORY_ROOT
 import click
 from flask import current_app, g
 from flask.cli import with_appcontext
@@ -28,7 +28,7 @@ def init_db():
     import sys
     root = DIRECTORY_ROOT
     sys.path.append(root)
-    from .code import music_metadata
+    from .src import music_metadata
 
     with current_app.open_resource('schema.sql') as f:
         db.executescript(f.read().decode('utf8'))

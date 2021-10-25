@@ -150,6 +150,9 @@ review logs with systemctl status smartalarm.service -n 200
 or like journalctl smartalarm.service
 
 
+to get portaudio
+- portaudio.h: No such file or directory
+
 
 todo:  set it up as static IP
 

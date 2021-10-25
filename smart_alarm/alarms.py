@@ -3,8 +3,8 @@ from sqlite3 import IntegrityError
 import pandas as pd
 import calendar
 import datetime as dt
-from .code.exceptions import PlaylistNotFound
-from .code.utils import _get_profiles, get_profile_from_id, get_profile_from_name, get_repeat_dates_string
+from .src.exceptions import PlaylistNotFound
+from .src.utils import _get_profiles, get_profile_from_id, get_profile_from_name, get_repeat_dates_string
 from .db import get_db
 
 bp = Blueprint('alarm', __name__, url_prefix='/alarm')

@@ -2,8 +2,8 @@ from flask import (Blueprint, flash, redirect, render_template, request, url_for
 from numpy import floor
 import pandas as pd
 from .db import get_db
-from .code.utils import *
-from .code.exceptions import InvalidInputError
+from .src.utils import *
+from .src.exceptions import InvalidInputError
 
 bp = Blueprint('sound', __name__, url_prefix='/sound')
 
@@ -104,8 +104,8 @@ def update(id):
             updates = {song_id:
                            {field: request.form[song_id + '_' + field] for field in fields}
                        for song_id in mod_songs}
-            dfinfo = df.loc[df['audio_id'].isin(mod_songs), ['audio_id', 'duration']].set_index('audio_id').to_dict()[
-                'duration']
+            dfinfo = df.loc[df['audio_id'].isin(mod_songs), ['audio_id', 'duration']
+                            ].set_index('audio_id').to_dict()['duration']
             print(dfinfo)
             try:
                 updates = verify_updates(updates, dfinfo)

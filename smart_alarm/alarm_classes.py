@@ -4,10 +4,10 @@ import time
 import datetime as dt
 import json
 from math import ceil
-from .code.wakeup import WakeupSpeaker, get_weather_nws, get_weather_owm, get_quote
-from .code.play import Song
-from .code.color import ColorProfile, Colors
-from .code.utils import get_repeat_dates_list, get_db_generic
+from .src.wakeup import WakeupSpeaker, get_weather_nws, get_weather_owm, get_quote
+from .src.play import Song
+from .src.color import ColorProfile, Colors
+from .src.utils import get_repeat_dates_list, get_db_generic
 from typing import List
 from flask import current_app
 from flask.logging import default_handler

@@ -1,4 +1,4 @@
-from .code.record_audio import SoundRecorderAnalyzer
+from .src.record_audio import SoundRecorderAnalyzer
 
 
 def view():

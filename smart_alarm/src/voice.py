@@ -9,8 +9,8 @@ try:
     from .config import api_key_google_path
     from .play import USBAUDIOID
 except ModuleNotFoundError:
-    from smart_alarm.code.config import api_key_google_path
-    from smart_alarm.code.play import USBAUDIOID
+    from smart_alarm.src.config import api_key_google_path
+    from smart_alarm.src.play import USBAUDIOID
 os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = api_key_google_path
 
 p = pyaudio.PyAudio()
