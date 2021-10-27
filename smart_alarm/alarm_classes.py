@@ -243,6 +243,7 @@ class AlarmWatcher(Thread):
                                          (select id pid, wake_window from playlists) playlists
                                    on alarms.sound_profile=playlists.pid""", con=db).set_index('id')
         except pd.io.sql.DatabaseError as nodatabase:
+            self.join()
             return
         df_alarms['color_profile'] = df_alarms['cprofile'].apply(json.loads)
         if df_alarms.empty:

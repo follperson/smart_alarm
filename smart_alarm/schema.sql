@@ -46,7 +46,7 @@ CREATE TABLE audio (
 CREATE TABLE playlists (
   id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
   name TEXT NOT NULL,
-  wake_window INTEGER Not Null
+  wake_window INTEGER DEFAULT 0
 );
 
 CREATE TABLE playlist (
