@@ -150,8 +150,16 @@ review logs with systemctl status smartalarm.service -n 200
 or like journalctl smartalarm.service
 
 
-to get portaudio
-- portaudio.h: No such file or directory
+to get portaudio 
+- (error: portaudio.h: No such file or directory
+- solve: `sudo apt-get install portaudio19-dev`
+
+to get hardware spi working:
+- https://www.raspberrypi-spy.co.uk/2014/08/enabling-the-spi-interface-on-the-raspberry-pi/
+
+wiring
+- https://cdn-learn.adafruit.com/assets/assets/000/063/404/medium640/led_strips_raspi_DotStar_SPI_bb.jpg?1539274090
+- https://learn.adafruit.com/adafruit-dotstar-leds/python-circuitpython
 
 
 todo:  set it up as static IP

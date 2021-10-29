@@ -5,13 +5,13 @@ After=network.target
 [Service]
 User=pi
 WorkingDirectory=/home/pi/coding/smart_alarm
-Environment="PATH=/home/pi/.conda/envs/SmartAlarm/bin:/usr/bin FLASK_APP=smart_alarm FLASK_ENV=development"
+Environment="PATH=/home/pi/miniconda3/envs/SmartAlarm/bin:/usr/bin FLASK_APP=smart_alarm FLASK_ENV=development"
 Environment=FLASK_APP=smart_alarm
 Environment=FLASK_ENV=development
-Environment=CONDA_ENV_PATH=/home/pi/.conda/envs/SmartAlarm
+Environment=CONDA_ENV_PATH=/home/pi/miniconda3/envs/SmartAlarm
 Environment=FLASK_RUN_RELOAD=False
-Environment=PATH=/home/pi/.conda/envs/SmartAlarm/bin:/usr/bin
-ExecStart=/home/pi/.conda/envs/SmartAlarm/bin/flask run --host=0.0.0.0 --port=8081
+Environment=PATH=/home/pi/miniconda3/envs/SmartAlarm/bin:/usr/bin
+ExecStart=/home/pi/miniconda3/envs/SmartAlarm/bin/flask run --host=0.0.0.0 --port=8081
 
 [Install]
 WantedBy=multi-user.target

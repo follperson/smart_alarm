@@ -12,10 +12,11 @@ from typing import List
 from flask import current_app
 from flask.logging import default_handler
 import logging
+
 logger = logging.getLogger(__name__)
 logger.addHandler(default_handler)
 logger.setLevel(logging.INFO)
-# todo make wake_window consistent just pulled
+
 
 def get_days_from_now(today: int, day_list: List[int]):
     try:
@@ -31,8 +32,8 @@ def get_days_from_now(today: int, day_list: List[int]):
 
 
 class Alarm(Thread):
-    def __init__(self, id, next_alarm_time, alarm_time, playlist, color_profile, wake_window, name, active,
-                 beg_vol=-40, end_vol=-12, snooze_time=2,  *args, **kwargs):
+    def __init__(self, id: int, next_alarm_time: dt.datetime, alarm_time, playlist, color_profile, wake_window, name: str, active: bool,
+                 beg_vol: int=-40, end_vol: int=-12, snooze_time: int=2,  *args, **kwargs):
         self.alarm_id = id
         self.alarm_time = alarm_time
         self.next_alarm_time = next_alarm_time
@@ -163,31 +164,41 @@ class Alarm(Thread):
     def stopped(self):
         return self._stop_event.is_set()
 
+    def ready_to_start(self):
+        if self.active:  # turned 'on' / poised to start
+            if not self.isAlive():  # initialized and not 'stopped'
+                if self.check_is_within_wake_window():
+                    return True
+        return False
+
+    def check_is_within_wake_window(self):
+        return self.next_alarm_time - dt.timedelta(seconds=int(self.wake_window)) < dt.datetime.now()
+
     def snooze(self):
         self.snoozed = True
         self.snooze_time_left = self.snooze_min * 60
 
     def mute(self):
-        print('muting')
+        logger.info('muting')
         if isinstance(self.current_song, Song):
             self.current_song.pause()
             self.muted = True
 
     def unmute(self):
-        print('unmuting')
+        logger.info('unmuting')
         if isinstance(self.current_song, Song):
             if self.current_song.is_paused:
                 self.current_song.play()
             self.muted = False
 
     def blind(self):
-        print('blinding')
+        logger.info('blinding')
         if isinstance(self.colors, Colors):
             self.colors.pause()
             self.blinded = True
 
     def unblind(self):
-        print('blinding')
+        logger.info('unblinding')
         if isinstance(self.colors, Colors):
             if self.colors.is_paused:
                 self.colors.play()
@@ -243,30 +254,30 @@ class AlarmWatcher(Thread):
                                          (select id pid, wake_window from playlists) playlists
                                    on alarms.sound_profile=playlists.pid""", con=db).set_index('id')
         except pd.io.sql.DatabaseError as nodatabase:
-            self.join()
+            logger.info('No Database Found!')
+            self.close()
             return
         df_alarms['color_profile'] = df_alarms['cprofile'].apply(json.loads)
         if df_alarms.empty:
             return
-        df_alarms.loc[:, 'dow'] = df_alarms.apply(lambda x: get_repeat_dates_list(x), axis=1)
+        df_alarms.loc[:, 'dow'] = df_alarms.apply(get_repeat_dates_list, axis=1)
         alarm_ids = list(self.alarms.keys())
         for alarm_id in alarm_ids:
             if self.alarms[alarm_id].stopped():
-                print('pop', alarm_id)
+                logger.info(f'Freshly Stopped {alarm_id}' )
                 self.alarms.pop(alarm_id)
 
         for alarm_id in df_alarms.index:
             if alarm_id in self.alarms:
-                if df_alarms.loc[alarm_id, 'modified'] > self.alarms[alarm_id].initialized_time:
-                    old_alarm = self.alarms.pop(alarm_id)
-                    old_alarm.stop()
+                if check_alarm_obj_should_be_reset(df_alarms.loc[alarm_id, :], self.alarms[alarm_id]):
+                    logger.info(f'Updating {alarm_id} in cache')
+                    self.alarms.pop(alarm_id).stop() # remove alarm from dict and stop it
                     self.alarms[alarm_id] = get_alarm(df_alarms=df_alarms, alarm_id=alarm_id, db=db)
             else:
                 self.alarms[alarm_id] = get_alarm(df_alarms=df_alarms, alarm_id=alarm_id, db=db)
+
             alarm = self.alarms[alarm_id]
-            if alarm.active and \
-                    not alarm.isAlive() and \
-                    (alarm.next_alarm_time - dt.timedelta(seconds=int(alarm.wake_window)) < dt.datetime.now()):
+            if alarm.ready_to_start():
                 try:
                     alarm.start()
                 except RuntimeError as e:
@@ -275,6 +286,7 @@ class AlarmWatcher(Thread):
                     continue
 
     def close(self):
+        # this will cause self.run() to exit
         self.closed = True
 
     def get_alarm(self):
@@ -283,11 +295,22 @@ class AlarmWatcher(Thread):
                 return alarm
 
 
+def check_alarm_obj_should_be_reset(alarm_dict: pd.DataFrame, alarm: Alarm):
+    if alarm_dict['modified'] > alarm.initialized_time:
+        logger.info('Reset Alarm due to recent sql update')
+        return True
+    elif alarm.next_alarm_time < dt.datetime.now():
+        logger.info('Reset Alarm due to most recent alarm passing')
+        return True
+    else:
+        return False
+
+
 def get_alarm(df_alarms, alarm_id, db):
-    print(df_alarms.loc[alarm_id,['dow', 'alarm_time', 'wake_window', 'active', 'sound_profile', 'name', 'color_profile']])
-    dow, alarm_time, wake_window, active, playlist_id, name, color_profile = df_alarms.loc[
-        alarm_id, ['dow', 'alarm_time', 'wake_window', 'active', 'sound_profile', 'name', 'color_profile']]
-    
+    alarm_info = df_alarms.loc[alarm_id, ['dow', 'alarm_time', 'wake_window', 'active', 'sound_profile', 'name', 'color_profile']]
+    logger.info(f'\n {alarm_info}')
+    dow, alarm_time, wake_window, active, playlist_id, name, color_profile = alarm_info
+
     next_alarm_time = get_next_alarm_time(alarm_time, dow)
 
     df_playlist = pd.read_sql('SELECT * FROM playlist INNER JOIN '
@@ -298,6 +321,7 @@ def get_alarm(df_alarms, alarm_id, db):
     return Alarm(id=alarm_id, name=name, alarm_time=alarm_time, next_alarm_time=next_alarm_time,
                  wake_window=wake_window, snooze_time=2,
                  playlist=df_playlist, color_profile=color_profile, active=active)
+
 
 class MultipleAlarmStartAttempts(Exception):
     pass

@@ -1,3 +1,10 @@
+
+import time
+import numpy as np
+from dataclasses import dataclass
+from threading import Thread, Event
+from typing import Tuple
+
 import adafruit_dotstar as dotstar
 try:
     import board
@@ -12,12 +19,6 @@ except NotImplementedError:
             pass
 
     dots = dumbdots()
-
-import time
-import numpy as np
-from dataclasses import dataclass
-from threading import Thread, Event
-from typing import Tuple
 
 
 @dataclass
