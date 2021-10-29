@@ -7,15 +7,11 @@ from math import ceil
 from .src.wakeup import WakeupSpeaker, get_weather_nws, get_weather_owm, get_quote
 from .src.play import Song
 from .src.color import ColorProfile, Colors
-from .src.utils import get_repeat_dates_list, get_db_generic
+from .src.utils import get_repeat_dates_list, get_db_generic,get_logger
 from typing import List
 from flask import current_app
-from flask.logging import default_handler
-import logging
 
-logger = logging.getLogger(__name__)
-logger.addHandler(default_handler)
-logger.setLevel(logging.INFO)
+logger = get_logger(__name__)
 
 
 def get_days_from_now(today: int, day_list: List[int]):
@@ -32,8 +28,9 @@ def get_days_from_now(today: int, day_list: List[int]):
 
 
 class Alarm(Thread):
-    def __init__(self, id: int, next_alarm_time: dt.datetime, alarm_time, playlist, color_profile, wake_window, name: str, active: bool,
-                 beg_vol: int=-40, end_vol: int=-12, snooze_time: int=2,  *args, **kwargs):
+    def __init__(self, id: int, next_alarm_time: dt.datetime, alarm_time, playlist: pd.DataFrame, color_profile: dict,
+                 wake_window: int, name: str, active: bool, beg_vol: int = -40, end_vol: int = -12,
+                 snooze_time: int = 2,  *args, **kwargs):
         self.alarm_id = id
         self.alarm_time = alarm_time
         self.next_alarm_time = next_alarm_time
@@ -72,9 +69,7 @@ class Alarm(Thread):
         print(fp, time_left, duration)
         vol_increase = self.vol_change_total * (duration / time_left) # something messed up here with snooze
         local_max = min(self.vol + vol_increase, self.end_vol)
-        logger.info(f'Starting Song: {fp}')
         self.current_song = Song(fp, min_vol=self.vol, max_vol=local_max, start_sec=start, end_sec=ceil(duration))
-        logger.info(f'using outpud ID: {self.current_song.output_device_index}')
         if not self.muted:
             self.current_song.play()
         else:
@@ -99,7 +94,6 @@ class Alarm(Thread):
         return time_left
 
     def play_colors(self):
-        logger.info('loading colors', self.color_profile)
         color_info = ColorProfile(**self.color_profile)
         logger.info('setting color')
         self.colors = Colors(color_info, seconds=self.wake_window)
@@ -308,7 +302,7 @@ def check_alarm_obj_should_be_reset(alarm_dict: pd.DataFrame, alarm: Alarm):
 
 def get_alarm(df_alarms, alarm_id, db):
     alarm_info = df_alarms.loc[alarm_id, ['dow', 'alarm_time', 'wake_window', 'active', 'sound_profile', 'name', 'color_profile']]
-    logger.info(f'\n {alarm_info}')
+    logger.debug(f'\n {alarm_info}')
     dow, alarm_time, wake_window, active, playlist_id, name, color_profile = alarm_info
 
     next_alarm_time = get_next_alarm_time(alarm_time, dow)

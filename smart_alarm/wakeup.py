@@ -1,14 +1,13 @@
 from flask import current_app, Blueprint, render_template, request, flash
-from flask.logging import default_handler
 from .alarm_classes import AlarmWatcher #, PyAudio, USBAUDIOID
+from .src.utils import get_logger
 from .db import get_db
 import pandas as pd
 import datetime as dt
-import logging
+
 bp = Blueprint('wakeup', __name__, url_prefix='/')
-logger = logging.getLogger(__name__)
-logger.addHandler(default_handler)
-logger.setLevel(logging.INFO)
+
+logger = get_logger(__name__)
 
 
 def get_watcher() -> AlarmWatcher:

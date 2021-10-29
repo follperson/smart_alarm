@@ -4,11 +4,12 @@ import pandas as pd
 import calendar
 import datetime as dt
 from .src.exceptions import PlaylistNotFound
-from .src.utils import _get_profiles, get_profile_from_id, get_profile_from_name, get_repeat_dates_string
+from .src.utils import _get_profiles, get_profile_from_id, get_profile_from_name, get_repeat_dates_string, get_logger
 from .db import get_db
 
 bp = Blueprint('alarm', __name__, url_prefix='/alarm')
-# todo playlist time is not changing when you edit it
+logger = get_logger(__name__)
+
 
 @bp.route('/create', methods=('GET', 'POST'))
 def create():
@@ -62,6 +63,7 @@ def create():
                      0 in days, 1 in days, 2 in days, 3 in days, 4 in days, 5 in days, 6 in days,)
                 )
                 db.commit()
+                logger.info(f'New Alarm added: {name}')
             except IntegrityError as e:
                 error = 'Integrity Error: ' + str(e)
             # return the success page
@@ -137,11 +139,12 @@ def update(id):
                 (name, time, active, sound_profile_id, color_profile_id, 0 in days, 1 in days, 2 in days, 3 in days, 4 in days,
                  5 in days, 6 in days, dt.datetime.now(), id,))
             db.commit()
+            logger.info(f'Updated Alarm: {name}')
 
-            # return the success page
+        # return the success page
             return render_template('alarms/success.html', params={'name': name, 'action': 'update alarm',
                                                                   'return': url_for('alarm.update', id=id)})
-
+        logger.info(f'Update Failed Alarm: {error}')
     flash('\n'.join(error))
     return render_template('alarms/create_alarm.html', use=use, name=name, time=time, days=days,
                            sound_profile=sound_profile, color_profile=color_profile, active=active,

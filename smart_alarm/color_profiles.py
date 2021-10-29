@@ -2,8 +2,10 @@ from flask import (Blueprint, flash, render_template, request, url_for, current_
 import json
 from .db import get_db
 import pandas as pd
-
+from .src.utils import get_logger
 bp = Blueprint('color', __name__, url_prefix='/color')
+
+logger = get_logger(__name__)
 
 
 def process_profile_creation(form):
@@ -36,9 +38,12 @@ def create():
         else:
             db.execute('INSERT INTO color_profiles (name, profile) VALUES (?,?)', (profile_name, json.dumps(profile)))
             db.commit()
+            logger.info(f'Added Color Profile: {profile_name}')
+
             return render_template('alarms/success.html', params={'name': profile_name,
                                                                   'action': 'create color profile',
                                                                   'return': url_for('color.create')})
+        logger.info(f'Failed to create Color Profile: {error}')
         flash(error)
     return render_template('sound_color/create_profile.html', name='Color ')
 
@@ -60,8 +65,10 @@ def update(id):
         else:
             db.execute('INSERT INTO color_profiles (name, profile) VALUES (?,?)', (profile_name, json.dumps(profile)))
             db.commit()
+            logger.info(f'Successful update to Color Profile: {profile_name}')
             return render_template('alarms/success.html', params={'name': profile_name, 'action': 'update color profile',
                                                                   'return': url_for('color.create')})
+        logger.info(f'Failed to update Color Profile: {error}')
         flash(error)
     return render_template('sound_color/create_profile.html', name='Update Color ')
 

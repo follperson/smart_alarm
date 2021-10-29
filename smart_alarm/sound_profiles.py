@@ -2,12 +2,11 @@ from flask import (Blueprint, flash, redirect, render_template, request, url_for
 from numpy import floor
 import pandas as pd
 from .db import get_db
-from .src.utils import *
+from .src.utils import get_logger, PlaylistNotFound, get_profile_from_name, get_profile_from_id
 from .src.exceptions import InvalidInputError
 
 bp = Blueprint('sound', __name__, url_prefix='/sound')
-
-# TODO THERE IS A Bug in computing the wake window
+logger = get_logger(__name__)
 
 @bp.route('/view', methods=('GET',))
 def view():
@@ -91,10 +90,10 @@ def update(id):
     int_cols = ['playlist_order', 'audio_start', 'audio_end']
     cols_to_show = ['filename', 'album', 'artist', 'duration', 'audio_start', 'audio_end', 'playlist_order']
     if request.method == 'POST':  # putting update
-        print(request.form)  # reference
 
         if 'cancel' in request.form:  # dont update
-            flash('Update Cancelled')
+            flash(f'Update Cancelled: {name}')
+            logger.info(f'Update Cancelled: {name}')
             return redirect(url_for('.view_playlist', id=id))
 
         elif 'submit' in request.form:
@@ -106,11 +105,11 @@ def update(id):
                        for song_id in mod_songs}
             dfinfo = df.loc[df['audio_id'].isin(mod_songs), ['audio_id', 'duration']
                             ].set_index('audio_id').to_dict()['duration']
-            print(dfinfo)
             try:
                 updates = verify_updates(updates, dfinfo)
             except InvalidInputError as err:
                 flash(str(err))
+                logger.info(str(err))
                 return render_template('sound_color/modify_playlist.html', name=name, df=df, int_cols=int_cols,
                                        cols_to_show=cols_to_show)
 
@@ -126,8 +125,8 @@ def update(id):
                 text = 'INSERT INTO playlist (%s) VALUES (%s ?, ?)' % (
                         ', '.join(fields + ['audio_id', 'playlist_id']), '?, ' * (len(fields)))
                 db.execute(text, update_input)
-            print('total', wake_window)
 
+            logger.info(f'Update Playlist: {name}')
             db.execute('UPDATE playlists set wake_window = ? where id = ?;', (wake_window, id))
             db.commit()
 

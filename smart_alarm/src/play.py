@@ -4,6 +4,7 @@ from pydub.utils import make_chunks
 from pyaudio import PyAudio
 from threading import Thread, Event
 import time
+from .utils import get_logger
 from math import ceil
 import pandas as pd
 SECOND = 1000
@@ -13,6 +14,8 @@ try:
     USBAUDIOID = [i for i in range(p.get_device_count()) if 'USB' in p.get_device_info_by_index(i)['name']][0]
 except IndexError:
     USBAUDIOID = None
+
+logger = get_logger('play-audio')
 
 
 def get_playlist(name):
@@ -39,9 +42,10 @@ class Song(Thread):
             start_sec: second of the song which we will start playing from
             end_sec: ending second of the song 
         """
-        print('initialize', f)
+        logger.debug(f'initialize song file {f}')
         # initalize audio object
         self.seg = AudioSegment.from_file(f)
+        self.filename = f
         # print('audiosegment set')
         # limit audio to be accessed to just the window between start and end seconds
         self.seg = self.seg[start_sec * SECOND:end_sec * SECOND]
@@ -87,8 +91,7 @@ class Song(Thread):
         else:
             info = self.p.get_default_output_device_info()
         device_sample_rate = info['defaultSampleRate']
-        print('Audio Device Name:',info['name'])
-        
+        logger.debug(f'Using Audio Device: {info["name"]}')
         device_sample_rate = int(device_sample_rate)        
         sample_rate = max(device_sample_rate, self.seg.frame_rate)
         return self.p.open(format=self.p.get_format_from_width(self.seg.sample_width),
@@ -103,7 +106,8 @@ class Song(Thread):
         chunk_count = 0
         chunks = make_chunks(self.seg, 100)[:-1]
         increment = abs(self.max_vol - self.cur_vol) / len(chunks)
-        print('cur vol:', self.cur_vol, 'chunks ', len(chunks))
+        # print('cur vol:', self.cur_vol, 'chunks ', len(chunks))
+        logger.info(f'Begin Streaming {self.filename}. Current Volume is {self.cur_vol}. {len(chunks)} chunks')
         while (chunk_count <= len(chunks) - 1) and not self.stopped():
             if not self.is_paused:  # write the audio content
                 cur_chunk = chunks[chunk_count] + self.cur_vol
@@ -114,10 +118,10 @@ class Song(Thread):
                 free = stream.get_write_available()
                 data = chr(0) * free
             stream.write(data)  # play the audio data just written
-
+        logger.info(f'Close {self.filename}. Current Volume is {self.cur_vol}.')
         stream.stop_stream()  # end the audio stream
         stream.close()
-        # self.p.terminate() # terminating this kills the whole flask app...? 
+
 
 # demoing
 def slow_roll(playlist, time_left):
