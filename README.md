@@ -166,6 +166,11 @@ todo:  set it up as static IP
 
 https://pimylifeup.com/raspberry-pi-static-ip-address/
 
+dockered
+
+docker build .
+docker run -it (to get into the container)
+
 step 1
 `ip r | grep default`
 `default via 192.168.1.1 dev wlan0 proto dhcp src 192.168.1.16 metric 303`

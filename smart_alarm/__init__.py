@@ -37,6 +37,9 @@ def create_app(test_config=None):
     from . import wakeup
     app.register_blueprint(wakeup.bp)
 
+    from . import view_logs
+    app.register_blueprint(view_logs.bp)
+
     with app.app_context():
         wakeup.get_watcher()
 
