@@ -10,6 +10,13 @@ logger = get_logger(__name__)
 def return_log_n(logname, n):
     return return_log(logname, n)
 
+@bp.route('/', methods=('GET',))
+def view_logs():
+    lognames = [f.split('.log')[0] for f in os.listdir('logs') if f.endswith('.log')]
+    return render_template('viewlog/index.html',lognames=lognames)
+
+
+
 
 @bp.route('/<string:logname>', methods=('GET',))
 def return_log_all(logname):
@@ -18,7 +25,7 @@ def return_log_all(logname):
 
 def return_log(logname, n=0):
     """
-    Create a new alarm using already established playlists and color profiles
+    Create a nm new alarm using already established playlists and color profiles
     """
     logger.debug(f'Reading Log {logname}')
     if not os.path.exists(f'logs/{logname}.log'):

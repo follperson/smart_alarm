@@ -1,0 +1,11 @@
+{% extends 'base.html' %}
+
+{% block header %}
+  <h1>{% block title %}Parse Log List{% endblock %}</h1>
+{% endblock %}
+
+{% block content %}
+    {% for logname in lognames %}
+        <a href="{{ url_for('logs.return_log_all', logname=logname) }}">View {{ logname }}.log</a><br>
+    {% endfor %}
+{% endblock %}
