@@ -134,17 +134,27 @@ audio raise and alarm basics function.
  
 current version is 0.1.0
 
+edit `systemmd` file  
+
+Copy systemmd file to the system pickup location
+`sudo cp systemmd /etc/systemd/system/smartalarm.service`
+
+Reset Daemon
+`sudo systemctl daemon-reload`
+
+Start Service
+`sudo systemctl enable smartalarm`
+
+Start Service
+`sudo systemctl start smartalarm`
 
 
+Check if it is running:
+`sudo systemctl is-active smartalarm`
 
-make systemd file, name it smartalarm.service
+`sudo reboot`
 
-copy to /etc/systemd/system/smartalarm.service
 
-reset the daemons with sudo systemctl daemon-reload
-start it with sudo systemctl
-
-sudo systemctl enable smartalarm
 
 review logs with systemctl status smartalarm.service -n 200
 or like journalctl smartalarm.service
