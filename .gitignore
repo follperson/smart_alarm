@@ -5,13 +5,15 @@ audio_records/*.wav
 audio_records/*.mp3
 audio_graphs/*.png
 
+nohup.out
+
 .zip
 Thumbs.db
 .idea/*
 __pycache__/
 .Python
 venv/
-
+logs/*.log
 *.pyc
 __pycache__/
 
