@@ -9,9 +9,9 @@ from math import ceil
 import pandas as pd
 SECOND = 1000
 time.sleep(5)
-p = PyAudio()
+pa = PyAudio()
 try:
-    USBAUDIOID = [i for i in range(p.get_device_count()) if 'USB' in p.get_device_info_by_index(i)['name']][0]
+    USBAUDIOID = [i for i in range(pa.get_device_count()) if 'USB' in pa.get_device_info_by_index(i)['name']][0]
 except IndexError:
     USBAUDIOID = None
 
@@ -50,7 +50,7 @@ class Song(Thread):
         # limit audio to be accessed to just the window between start and end seconds
         self.seg = self.seg[start_sec * SECOND:end_sec * SECOND]
         self.is_paused = True
-        self.p = PyAudio()
+        # self.p = PyAudio()
         self.cur_vol = min_vol
         self.max_vol = max_vol
         self.start_sec = start_sec
@@ -87,18 +87,18 @@ class Song(Thread):
         # print('open stream')
         
         if self.output_device_index is not None:
-            info = self.p.get_device_info_by_index(self.output_device_index)
+            info = pa.get_device_info_by_index(self.output_device_index)
         else:
-            info = self.p.get_default_output_device_info()
+            info = pa.get_default_output_device_info()
         device_sample_rate = info['defaultSampleRate']
         logger.debug(f'Using Audio Device: {info["name"]}')
         device_sample_rate = int(device_sample_rate)        
         sample_rate = max(device_sample_rate, self.seg.frame_rate)
-        return self.p.open(format=self.p.get_format_from_width(self.seg.sample_width),
-                           channels=self.seg.channels,
-                           rate=sample_rate,
-                           output=True,
-                           output_device_index=self.output_device_index)
+        return pa.open(format=pa.get_format_from_width(self.seg.sample_width),
+                       channels=self.seg.channels,
+                       rate=sample_rate,
+                       output=True,
+                       output_device_index=self.output_device_index)
 
     def run(self):
         """ Kick off playing the audio """
@@ -120,7 +120,7 @@ class Song(Thread):
             stream.write(data)  # play the audio data just written
         logger.info(f'Close {self.filename}. Current Volume is {self.cur_vol}.')
         stream.stop_stream()  # end the audio stream
-        # stream.close()
+        stream.close()
 
 
 # demoing
