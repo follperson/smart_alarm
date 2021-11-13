@@ -56,7 +56,7 @@ class Song(Thread):
         self.start_sec = start_sec
         self.end_sec = end_sec
         self.output_device_index = output_device_index
-        Thread.__init__(self, name=basename(f), *args, **kwargs)
+        Thread.__init__(self, name=basename(self.filename), *args, **kwargs)
         # print('Thread goes')
 
         # Thread functions
@@ -121,6 +121,7 @@ class Song(Thread):
         logger.info(f'Close {self.filename}. Current Volume is {self.cur_vol}.')
         stream.stop_stream()  # end the audio stream
         stream.close()
+        logger.debug(f'{self.filename}. stopped: {stream.is_stopped()}   active: {stream.is_active()}  running : {stream._is_running}')
 
 
 # demoing
