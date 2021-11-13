@@ -121,7 +121,7 @@ class Song(Thread):
         logger.info(f'Close {self.filename}. Current Volume is {self.cur_vol}.')
         stream.stop_stream()  # end the audio stream
         stream.close()
-        logger.debug(f'{self.filename}. stopped: {stream.is_stopped()}   active: {stream.is_active()}  running : {stream._is_running}')
+        time.sleep(5)
 
 
 # demoing
