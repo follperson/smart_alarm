@@ -11,6 +11,8 @@ Environment=FLASK_ENV=development
 Environment=CONDA_ENV_PATH=/home/pi/miniconda3/envs/SmartAlarm
 Environment=FLASK_RUN_RELOAD=False
 Environment=PATH=/home/pi/miniconda3/envs/SmartAlarm/bin:/usr/bin
+Restart=on-failure
+RestartSec=3s
 ExecStart=/home/pi/miniconda3/envs/SmartAlarm/bin/flask run --host=0.0.0.0 --port=8081
 
 [Install]

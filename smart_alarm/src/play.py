@@ -120,7 +120,7 @@ class Song(Thread):
             stream.write(data)  # play the audio data just written
         logger.info(f'Close {self.filename}. Current Volume is {self.cur_vol}.')
         stream.stop_stream()  # end the audio stream
-        stream.close()
+        # stream.close()
 
 
 # demoing

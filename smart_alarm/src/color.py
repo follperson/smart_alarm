@@ -76,6 +76,7 @@ class Colors(Thread):
     def stop(self):
         """ turn off the puppies """
         logger.info('Stopping Dots')
+        self.turn_off_dots()
         self._stop_event.set()
 
     def stopped(self):

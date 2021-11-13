@@ -28,14 +28,17 @@ def return_log(logname, n=0):
     Create a nm new alarm using already established playlists and color profiles
     """
     logger.debug(f'Reading Log {logname}')
-    if not os.path.exists(f'logs/{logname}.log'):
+    if os.path.exists(f'logs/{logname}.log'):
+        with open(f'logs/{logname}.log','r') as fo:
+            log_info = fo.readlines()[-n:]
+    elif logname == 'journalctl':
+        if n == 0:  n = 1000
+        os.system(f'journalctl -u smartalarm -n {n} > logs/jctl.log')
+        with open(f'logs/jctl.log','r') as fo:
+            log_info = fo.readlines()
+    else:
         flash(f'No Log Named {logname}')
         log_info = ''
-    else:
-        with open(f'logs/{logname}.log','r') as fo:
-            log_info = fo.readlines()
-        if n != 0:
-            log_info = log_info[-n:]
     cleaned_log_info = []
     for line in log_info:
         if not line.startswith('['):
