@@ -11,7 +11,7 @@ SECOND = 1000
 time.sleep(5)
 pa = PyAudio()
 try:
-    USBAUDIOID = [i for i in range(pa.get_device_count()) if 'USB' in pa.get_device_info_by_index(i)['name']][0]
+    USBAUDIOID = None #[i for i in range(pa.get_device_count()) if 'USB' in pa.get_device_info_by_index(i)['name']][0]
 except IndexError:
     USBAUDIOID = None
 
