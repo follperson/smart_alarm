@@ -8,9 +8,11 @@ import adafruit_dotstar as dotstar
 
 logger = get_logger('play-color')
 
+n_dotstar = 90
+
 try:
     import board
-    dots = dotstar.DotStar(board.SCLK, board.MOSI, 30, brightness=0.9)
+    dots = dotstar.DotStar(board.SCLK, board.MOSI, n_dotstar, brightness=1)
 except NotImplementedError:
     class dumbdots:
         def __init__(self):
