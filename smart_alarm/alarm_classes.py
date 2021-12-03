@@ -148,6 +148,10 @@ class Alarm(Thread):
         self.stop()
         logger.info('Completed Alarm Sequence for %s' % self.alarm_name)
 
+    def cancel(self):
+        self.mute()
+        self.blind()
+
     def stop(self):
         if self.current_song is not None:
             self.current_song.stop()
@@ -164,6 +168,9 @@ class Alarm(Thread):
                 if self.check_is_within_wake_window():
                     return True
         return False
+
+    def check_alarm_passed(self):
+        return self.next_alarm_time > dt.datetime.now()
 
     def check_is_within_wake_window(self):
         return self.next_alarm_time - dt.timedelta(seconds=int(self.wake_window)) < dt.datetime.now()
@@ -266,9 +273,9 @@ class AlarmWatcher(Thread):
                 if check_alarm_obj_should_be_reset(df_alarms.loc[alarm_id, :], self.alarms[alarm_id]):
                     logger.info(f'Updating {alarm_id} in cache')
                     self.alarms.pop(alarm_id).stop() # remove alarm from dict and stop it
-                    self.alarms[alarm_id] = get_alarm(df_alarms=df_alarms, alarm_id=alarm_id, db=db)
+                    self.alarms[alarm_id] = get_alarm(df_alarms=df_alarms, alarm_id=alarm_id, db=db)  # set new alarm
             else:
-                self.alarms[alarm_id] = get_alarm(df_alarms=df_alarms, alarm_id=alarm_id, db=db)
+                self.alarms[alarm_id] = get_alarm(df_alarms=df_alarms, alarm_id=alarm_id, db=db)   # set new alarm
 
             alarm = self.alarms[alarm_id]
             if alarm.ready_to_start():

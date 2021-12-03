@@ -72,8 +72,10 @@ def view():
                         alarm.blind()
                     else:
                         alarm.unblind()
-                if f'skip_{alarm_id}' in request.form:
+                if f'skip_songs_{alarm_id}' in request.form:
                     alarm.skip()
+                if f'cancel_{alarm_id}' in request.form:
+                    alarm.cancel()
 
     for alarm_id in alarm_dict:
         assert alarm_id in watcher.alarms, 'Alarm ID not in sql'

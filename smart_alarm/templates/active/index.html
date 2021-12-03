@@ -49,8 +49,10 @@
           {% if alarms[alarm_id]['running'] %}
             <input style="background-color:lightblue" type="submit" name="mute_{{alarm_id}}" value="ToggleAudio">
             <input style="background-color:lightgreen" type="submit" name="blind_{{alarm_id}}" value="ToggleColor">
-            <input style="background-color:orange" type="submit" name="skip_{{alarm_id}}" value="SkipSongs">
+            <input style="background-color:orange" type="submit" name="skip_songs_{{alarm_id}}" value="SkipSongs">
+            <input style="background-color:white" type="submit" name="cancel_{{alarm_id}}" value="Cancel">
           {% endif %}
+
         </td>
         {% endif %}
       </tr>
