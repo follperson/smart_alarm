@@ -23,12 +23,13 @@ except NotImplementedError:
 
     dots = dumbdots()
 
+DotstarColor = Tuple[int, int, int]
 
 @dataclass
 class ColorProfile:
-    cycle: Tuple[Tuple] # ((1,0,0),(2,0,0), (0,1,2))
-    end: Tuple
-    start: Tuple
+    cycle: Tuple[DotstarColor, ...] # ((1,0,0),(2,0,0), (0,1,2))
+    end: DotstarColor
+    start: DotstarColor
 
     def get_steps(self) -> int:
         assert self.end > self.start, 'end cannot be less than start'
@@ -42,6 +43,12 @@ class ColorProfile:
         n = np.nanmin(diff / cycle_total)
 
         return int(n) * cycle_length
+
+
+RED = (1, 0, 0)
+GREEN = (0, 1, 0)
+BLUE = (0, 0, 1)
+white_ColorProfile = ColorProfile(cycle=(RED, GREEN, BLUE), end=(255, 255, 255), start=(0, 0, 0))
 
 
 class Colors(Thread):
