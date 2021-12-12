@@ -13,6 +13,7 @@ n_dotstar = 90
 try:
     import board
     dots = dotstar.DotStar(board.SCLK, board.MOSI, n_dotstar, brightness=1)
+    dots.fill((0, 0, 0))
 except NotImplementedError:
     class dumbdots:
         def __init__(self):
@@ -27,7 +28,7 @@ DotstarColor = Tuple[int, int, int]
 
 @dataclass
 class ColorProfile:
-    cycle: Tuple[DotstarColor, ...] # ((1,0,0),(2,0,0), (0,1,2))
+    cycle: Tuple[DotstarColor, ...]  # ((1,0,0),(2,0,0), (0,1,2))
     end: DotstarColor
     start: DotstarColor
 
