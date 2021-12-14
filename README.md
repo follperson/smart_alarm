@@ -1,4 +1,4 @@
-Review write-up.md for howto.
+Review [the write up](/write-up.md) for how to.
 
 ## next steps
 

@@ -44,28 +44,28 @@ Adafruit Dotstar bindings, and google voice to speech (link).
 
 #### Hardware Requirements
 
-1. [Raspberry Pi](https://www.raspberrypi.org/) (3b+) or newer, preferably
-1. [adafruit dotstars](https://learn.adafruit.com/adafruit-dotstar-leds) (>= 1 yard) (link) 
-    - you can use more but will require an external power source, which may further require logic gate shifting, which is not covered here, but see: (link)
-    - could also use other thing
+1. [Raspberry Pi](https://www.raspberrypi.org/) (3b+) or newer
+1. [Adafruit Dotstars](https://learn.adafruit.com/adafruit-dotstar-leds) (>= 1 yard) 
+    - [Power Source](https://www.adafruit.com/product/1466) if you are using more than 1 yard
 2. [USB Speaker](https://www.adafruit.com/product/3369)
 2. [Breadboard](https://www.adafruit.com/product/64)
 2. [rpi GPIO to Breadboard](https://www.adafruit.com/product/4353)    
 3. soldering iron 
-4. peripherals: 
-    4. HDMI based monitor
-    5. USB keyboard
-    6. USB Mouse
-    7. Wifi + Router
-    8. phone or other device connected to wifi to drive it
+4. peripherals:
+    - HDMI based monitor
+    - USB keyboard
+    - USB Mouse
+    - Wifi + Router
+    - Phone or other device connected to wifi to drive it
     
 #### Primary Packages / versions
 
-- python 3.6
-- miniconda
-- Audio
+- Python 3.6
+- Miniconda
+- Audio managment
    - pyaudio
    - pydub
+   - ffmpeg
 - Web server
   - flask
 - led/gpio
@@ -76,11 +76,11 @@ Adafruit Dotstar bindings, and google voice to speech (link).
 
 ### Pre-RPI Alarm clock Setup
 
-- a Raspberry Pi with a SD card imaged with the raspian OS.
-- a google developers account with text to speech enabled. 
-   - create a file named 'google_key.txt' in the root directory of this repo with the google key.
-- Miniconda, ffmpeg, and libaudio installed on the raspberry pi
-- ssh enabled on the raspberry pi
+- Raspberry Pi with a SD card imaged with the Raspian OS.
+- Google developers account with text to speech enabled. 
+   - Create a file named 'google_key.txt' in the root directory of this repo with the google key.
+- Miniconda, ffmpeg, and libaudio installed on the raspberry pi (see [Notes](#misc-support-notes))
+- SPI, SSH enabled
 
 ## Setup
 
@@ -101,6 +101,8 @@ See the following photos for reference.
 ![SCLK-MOSI Close Up](write-up/images/sclk-mosi-close-up.jpg)
 
 ![Ground and Power to Breaboard](write-up/images/gnd-3v-close-up.jpg)
+
+See [wiring references](#wiring) for more detail.  
 
 ![Loose wires to Dotstar Collection (Yellow is SCLK to CI/CO, Blue-Green is MOSI to DI/DO, Red is Power, Black is Ground)](write-up/images/loose-to-group.jpg)
 
@@ -180,7 +182,6 @@ or any sort of song-splicing combinations.
 
 ![Select Songs for Playlist](write-up/images/ChooseSongs.png)
 
-
 Next, navigate to 'Create / View Color Profile', to create a color profile. 
 Start the process the same way as before, but create the profile by specifying 
 starting and ending color values. In addition, you can specify the color update schedule, 
@@ -201,14 +202,16 @@ Now you should have a dynamic alarm clock!
 
 ## Misc support notes: 
 
-to get portaudio 
-- (error: portaudio.h: No such file or directory
+To get portaudio 
+- error: portaudio.h: No such file or directory
 - solve: `sudo apt-get install portaudio19-dev`
 
-to get hardware spi working:
+To get hardware spi working:
 - https://www.raspberrypi-spy.co.uk/2014/08/enabling-the-spi-interface-on-the-raspberry-pi/
 
-wiring
+Conda on raspberry pi
+- https://gist.github.com/simoncos/a7ce35babeaf73f512be24135c0fbafb
+
+### Wiring
 - https://cdn-learn.adafruit.com/assets/assets/000/063/404/medium640/led_strips_raspi_DotStar_SPI_bb.jpg?1539274090
 - https://learn.adafruit.com/adafruit-dotstar-leds/python-circuitpython
-
